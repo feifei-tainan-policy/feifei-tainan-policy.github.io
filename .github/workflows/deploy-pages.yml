@@ -36,7 +36,7 @@ jobs:
 
       - name: Build
         env:
-          VITE_BASE_PATH: /feifei-tainan-policy/
+          VITE_BASE_PATH: /
         run: npm run build
 
       - name: Verify output

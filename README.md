@@ -4,9 +4,9 @@
 
 專案不使用 ChatGPT Sites 專屬登入、Server Runtime、資料庫、API 或路由功能，可以直接在一般電腦執行，也可以部署到 GitHub Pages、Cloudflare Pages、Netlify、Vercel 或任何靜態網站空間。
 
-- 目前 Site 參考網址：<https://feifei-tainan-policy-gallery.thewillie-35.chatgpt.site>
-- GitHub Repository：<https://github.com/willie-yes100/feifei-tainan-policy>
-- GitHub Pages 預定網址：<https://willie-yes100.github.io/feifei-tainan-policy/>
+- 正式網址：<https://feifei-tainan-policy.github.io/>
+- GitHub Repository：<https://github.com/feifei-tainan-policy/feifei-tainan-policy.github.io>
+- 早期 ChatGPT Site 參考版本（已非最新）：<https://feifei-tainan-policy-gallery.thewillie-35.chatgpt.site>
 
 ## 技術規格
 
@@ -200,10 +200,11 @@ Repository 第一次部署時：
 4. 在 `Build and deployment` 將 `Source` 設為 `GitHub Actions`。
 5. 到 `Actions` 查看 `Deploy GitHub Pages`。
 
-目前 `vite.config.ts` 的正式 Base Path 是：
+本專案部署為使用者網站（Repository 名稱即 `feifei-tainan-policy.github.io`），
+因此 `vite.config.ts` 的正式 Base Path 是根目錄：
 
 ```text
-/feifei-tainan-policy/
+/
 ```
 
 如果 Repository 改名，請同步修改：
@@ -213,22 +214,19 @@ Repository 第一次部署時：
 - `.env.example`
 - README 內的 GitHub Pages 網址
 
-## 安全推送到既有 Repository
+## 後續更新流程
 
-目標 Repository 目前不是空的。為避免直接覆蓋既有 `main`，建議先以新分支推送並核對差異：
+本專案已推送至 `main`，並由 GitHub Actions 自動部署。日常更新：
 
 ```bash
-git init
 git add .
-git commit -m "Export current Feifei policy site"
-git branch -M export-current-site
-git remote add origin https://github.com/willie-yes100/feifei-tainan-policy.git
-git push -u origin export-current-site
+git commit -m "更新政策內容"
+git push
 ```
 
-核對完成後，再透過 Pull Request 合併到 `main`。不要使用 `git push --force`。
+推送到 `main` 後會自動觸發 `Deploy GitHub Pages`，完成後即反映到 <https://feifei-tainan-policy.github.io/>。
 
-如果已經將 Repository clone 到本機，請直接把本專案內容放到該 clone 裡，以一般分支、Commit、Pull Request 流程更新。
+多人協作時請改用分支與 Pull Request 流程，不要使用 `git push --force`。
 
 ## 自訂網域
 

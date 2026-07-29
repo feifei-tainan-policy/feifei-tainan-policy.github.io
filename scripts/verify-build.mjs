@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const root = new URL("..", import.meta.url);
 const dist = new URL("./dist/", root);
@@ -43,7 +44,7 @@ assert.match(html, /<div id="root"><\/div>/);
 assert.match(html, /妃妃市長8大政策｜接棒台南/);
 assert.doesNotMatch(html, /chatgpt-auth|oai-authenticated-user/i);
 
-const bundleDirectory = join(dist.pathname, "assets");
+const bundleDirectory = fileURLToPath(new URL("assets/", dist));
 const bundleText = readdirSync(bundleDirectory)
   .filter((name) => name.endsWith(".js"))
   .map((name) => readFileSync(join(bundleDirectory, name), "utf8"))
