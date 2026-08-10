@@ -17,7 +17,8 @@ export default defineConfig(({ command, mode }) => {
       sourcemap: true,
     },
     server: {
-      host: true,
+      // 只綁本機回送介面，避免同網段其他裝置連入（網站尚未公開）
+      host: "127.0.0.1",
     },
   };
 });
