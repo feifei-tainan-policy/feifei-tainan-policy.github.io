@@ -4,7 +4,8 @@
 
 專案不使用 ChatGPT Sites 專屬登入、Server Runtime、資料庫、API 或路由功能，可以直接在一般電腦執行，也可以部署到 GitHub Pages、Cloudflare Pages、Netlify、Vercel 或任何靜態網站空間。
 
-- 正式網址：<https://feifei-tainan-policy.github.io/>
+- 正式網址：<https://feifei-tainan-policy.com/>（自訂網域，由 `public/CNAME` 指定）
+- GitHub Pages 預設網址：<https://feifei-tainan-policy.github.io/>（會自動轉址到正式網址）
 - GitHub Repository：<https://github.com/feifei-tainan-policy/feifei-tainan-policy.github.io>
 - 早期 ChatGPT Site 參考版本（已非最新）：<https://feifei-tainan-policy-gallery.thewillie-35.chatgpt.site>
 
@@ -224,7 +225,10 @@ git commit -m "更新政策內容"
 git push
 ```
 
-推送到 `main` 後會自動觸發 `Deploy GitHub Pages`，完成後即反映到 <https://feifei-tainan-policy.github.io/>。
+推送到 `main` 後會自動觸發 `Deploy GitHub Pages`，完成後即反映到 <https://feifei-tainan-policy.com/>。
+
+> 注意：`public/CNAME` 內容為 `feifei-tainan-policy.com`，請勿刪除。
+> 本專案使用 GitHub Actions 部署，若該檔案遺失，GitHub Pages 的自訂網域設定會在下次部署時被清空。
 
 多人協作時請改用分支與 Pull Request 流程，不要使用 `git push --force`。
 
