@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { getBriefById } from "./data/briefs";
 import { policies } from "./data/policies";
 import { siteConfig } from "./data/site";
 import { assetUrl } from "./lib/assets";
@@ -13,6 +14,7 @@ function App() {
   const [isStageExpanded, setIsStageExpanded] = useState(false);
   const stageRef = useRef<HTMLElement>(null);
   const active = policies.find((policy) => policy.id === activeId) ?? policies[0];
+  const activeBrief = getBriefById(active.id);
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -176,6 +178,12 @@ function App() {
                 <li key={point}>{point}</li>
               ))}
             </ul>
+            <button
+              className="briefJump"
+              onClick={() => scrollToSection("policy-brief")}
+            >
+              不看影片？讀文字重點 <span aria-hidden="true">↓</span>
+            </button>
             <div className={`videoStatus ${active.videoPath ? "online" : ""}`}>
               <span />
               {active.videoPath ? "影片已上線" : "影片即將上線"}
@@ -198,6 +206,66 @@ function App() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section
+        className="briefSection"
+        id="policy-brief"
+        aria-labelledby="brief-lead"
+        style={
+          {
+            "--active-accent": active.accent,
+            "--active-tint": active.tint,
+          } as CSSProperties
+        }
+      >
+        <span className="briefWatermark" aria-hidden="true">
+          {active.number}
+        </span>
+
+        {activeBrief ? (
+          <div className="briefInner">
+            <div className="briefHead">
+              <span className="briefLabel">政策重點・文字版</span>
+              <h3 id="brief-lead">{activeBrief.lead}</h3>
+              <p className="briefMeta">
+                {active.title}
+                {activeBrief.source && <i>{activeBrief.source}</i>}
+                {activeBrief.pending && (
+                  <em>專屬新聞稿待補，內容摘錄自其他稿件</em>
+                )}
+              </p>
+            </div>
+
+            <ul className="briefTags">
+              {activeBrief.tags.map((tag) => (
+                <li key={tag}>{tag}</li>
+              ))}
+            </ul>
+
+            <div className="briefBody">
+              {activeBrief.blocks.map((block) => (
+                <article className="briefBlock" key={block.heading}>
+                  <h4>{block.heading}</h4>
+                  <p>{block.body}</p>
+                </article>
+              ))}
+            </div>
+
+            {activeBrief.quote && (
+              <blockquote className="briefQuote">
+                <p>{activeBrief.quote}</p>
+                <cite>陳亭妃</cite>
+              </blockquote>
+            )}
+          </div>
+        ) : (
+          <div className="briefInner briefEmpty">
+            <span className="briefLabel">政策重點・文字版</span>
+            <h3 id="brief-lead">{active.title}的文字重點整理中</h3>
+            <p>目前可先觀看上方政策影片，或參考右側的政策內容摘要。</p>
+          </div>
+        )}
       </section>
 
       <footer>
