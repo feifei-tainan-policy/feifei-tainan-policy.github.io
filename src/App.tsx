@@ -231,9 +231,6 @@ function App() {
               <p className="briefMeta">
                 {active.title}
                 {activeBrief.source && <i>{activeBrief.source}</i>}
-                {activeBrief.pending && (
-                  <em>專屬新聞稿待補，內容摘錄自其他稿件</em>
-                )}
               </p>
             </div>
 

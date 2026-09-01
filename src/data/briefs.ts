@@ -197,5 +197,19 @@ export const policyBriefs: Record<string, PolicyBrief> = {
   },
 };
 
+/**
+ * 目前顯示在網站上的政策文字重點。
+ * 文化（culture）與美食（food）的內容已寫在上方，但尚無專屬新聞稿，
+ * 暫不對外顯示；拿到正式稿件後，把 id 加進這份清單即可上線。
+ */
+const publishedIds = new Set([
+  "technology",
+  "agriculture",
+  "tourism",
+  "welfare",
+  "transport",
+  "sister",
+]);
+
 export const getBriefById = (id: string): PolicyBrief | undefined =>
-  policyBriefs[id];
+  publishedIds.has(id) ? policyBriefs[id] : undefined;
