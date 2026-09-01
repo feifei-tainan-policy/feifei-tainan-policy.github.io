@@ -12,6 +12,7 @@ function scrollToSection(id: string) {
 function App() {
   const [activeId, setActiveId] = useState(policies[0].id);
   const [isStageExpanded, setIsStageExpanded] = useState(false);
+  const [hasStartedVideo, setHasStartedVideo] = useState(false);
   const stageRef = useRef<HTMLElement>(null);
   const active = policies.find((policy) => policy.id === activeId) ?? policies[0];
   const activeBrief = getBriefById(active.id);
@@ -28,6 +29,8 @@ function App() {
 
   const selectPolicy = (id: string) => {
     setActiveId(id);
+    // 切換政策時收起已載入的 YouTube 播放器，避免上一支影片繼續播放
+    setHasStartedVideo(false);
   };
 
   const toggleFullscreen = async () => {
@@ -144,7 +147,30 @@ function App() {
 
         <div className="stageLayout">
           <div className="videoFrame">
-            {active.videoPath ? (
+            {active.youtubeId ? (
+              hasStartedVideo ? (
+                <iframe
+                  key={active.youtubeId}
+                  className="youtubeFrame"
+                  src={`https://www.youtube-nocookie.com/embed/${active.youtubeId}?autoplay=1&rel=0&playsinline=1`}
+                  title={`${active.title}政策影片`}
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              ) : (
+                <button
+                  className="videoFacade"
+                  onClick={() => setHasStartedVideo(true)}
+                  aria-label={`播放${active.title}政策影片`}
+                >
+                  {active.posterPath && (
+                    <img src={assetUrl(active.posterPath)} alt="" />
+                  )}
+                  <span className="facadePlay" aria-hidden="true" />
+                  <span className="facadeHint">4K 高畫質</span>
+                </button>
+              )
+            ) : active.videoPath ? (
               <video
                 key={active.videoPath}
                 src={assetUrl(active.videoPath)}
@@ -184,9 +210,13 @@ function App() {
             >
               不看影片？讀文字重點 <span aria-hidden="true">↓</span>
             </button>
-            <div className={`videoStatus ${active.videoPath ? "online" : ""}`}>
+            <div
+              className={`videoStatus ${
+                active.youtubeId || active.videoPath ? "online" : ""
+              }`}
+            >
               <span />
-              {active.videoPath ? "影片已上線" : "Coming soon"}
+              {active.youtubeId || active.videoPath ? "影片已上線" : "Coming soon"}
             </div>
           </aside>
         </div>
@@ -202,7 +232,9 @@ function App() {
             >
               <span>{policy.number}</span>
               {policy.shortTitle}
-              {policy.videoPath && <i aria-label="影片已上線" />}
+              {(policy.youtubeId || policy.videoPath) && (
+                <i aria-label="影片已上線" />
+              )}
             </button>
           ))}
         </div>

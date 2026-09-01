@@ -8,6 +8,8 @@ export type Policy = {
   points: string[];
   accent: string;
   tint: string;
+  /** YouTube 影片 ID，設定後優先於自架的 videoPath */
+  youtubeId?: string;
   videoPath?: string;
   posterPath?: string;
 };
