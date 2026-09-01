@@ -22,8 +22,8 @@ export const policies: Policy[] = [
   {
     id: "agriculture",
     number: "02",
-    shortTitle: "農漁牧",
-    title: "農漁牧妃妃市長",
+    shortTitle: "農漁",
+    title: "農漁妃妃市長",
     english: "AGRICULTURE",
     summary: "讓生產更聰明、工作更安心，也讓台南好物走得更遠。",
     points: [
@@ -48,6 +48,7 @@ export const policies: Policy[] = [
     points: ["深化城市品牌", "串聯城鄉旅遊路線", "提升國際觀光能見度"],
     accent: "#e04a67",
     tint: "#fff0f3",
+    youtubeId: "2J2N1mHFz2w",
     videoPath: "videos/tourism.mp4",
     posterPath: "posters/tourism.jpg",
   },

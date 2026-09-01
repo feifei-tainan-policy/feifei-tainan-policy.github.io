@@ -215,6 +215,40 @@ Repository 第一次部署時：
 - `.env.example`
 - README 內的 GitHub Pages 網址
 
+## 版本切換
+
+網站有兩個並存的內容版本，可以隨時互換：
+
+| 版本 | 標籤／分支 | 內容 |
+| --- | --- | --- |
+| **純影片版**（目前線上） | `v2.0-video-only` · `main` | 影片舞台 + 右側短條列，影片下方直接是頁尾 |
+| **含政策文字版** | `v1.2-with-brief` · `with-brief` | 多一個「政策重點・文字版」閱讀區，由 8 份新聞稿濃縮，隨政策切換 |
+
+兩個版本的影片、順序、配色完全相同，差別只在有沒有文字重點區。
+
+切換到含政策文字版：
+
+```bash
+git checkout with-brief -- src/ scripts/
+npm run check
+git commit -am "切換為含政策文字版"
+git push
+```
+
+切回純影片版：
+
+```bash
+git checkout v2.0-video-only -- src/ scripts/
+npm run check
+git commit -am "切換為純影片版"
+git push
+```
+
+文字重點的內容放在 `src/data/briefs.ts`（已定稿的 6 項）與
+`src/data/briefs.draft.ts`（文化、美食的草稿，刻意不被 import，
+因此不會進入打包結果）。這兩個檔案在純影片版中仍保留在 repo 裡，
+只是沒有被引用。
+
 ## 後續更新流程
 
 本專案已推送至 `main`，並由 GitHub Actions 自動部署。日常更新：
