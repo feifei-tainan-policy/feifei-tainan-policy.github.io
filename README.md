@@ -113,24 +113,28 @@ src/data/policies.ts
 - `points`
 - `accent`
 - `tint`
+- `youtubeId`（選填，設定後優先於 `videoPath`）
 - `videoPath`
 - `posterPath`
 
-有 `videoPath` 的政策會顯示播放器與「影片已上線」；沒有影片路徑的政策會保留目前的 16:9「政策影片即將上線」版型。
+播放來源的優先順序是 `youtubeId` → `videoPath` → 佔位版型。設定 `youtubeId`
+時會先顯示 `posterPath` 的封面與播放鍵，使用者點擊後才載入 YouTube 播放器，
+避免未播放就載入第三方程式碼與 cookie。兩者皆未設定的政策會顯示 16:9 的
+「COMING SOON」版型。
 
-目前已上線影片：
+目前已上線影片（皆由 YouTube 播放，並保留自架 1080p 檔案作為後備）：
 
 - 01 科技
-- 02 農漁牧
-- 06 福利
-- 08 姐姐
+- 02 農漁
+- 03 觀光
 
 目前保留預告版：
 
-- 03 觀光
-- 04 文化
-- 05 美食
-- 07 交通
+- 04 福利
+- 05 交通
+- 06 文化
+- 07 美食
+- 08 姐姐
 
 ## 替換首頁圖片與影片
 
@@ -175,7 +179,10 @@ videoPath: "/videos/technology.mp4"
 - 建議加入 Fast Start
 - 單檔請保持在 GitHub 的 100 MB 上傳限制以下
 
-目前完整媒體約 53 MB，單一最大影片約 18 MB，可以直接放在 GitHub Repository 與 GitHub Pages。
+目前完整媒體約 79 MB，單一最大影片約 31 MB，可以直接放在 GitHub Repository 與 GitHub Pages。
+
+4K 母檔請上傳到 YouTube，不要放進 Repository：單檔超過 100 MB 會被 GitHub 拒絕，
+且 GitHub Pages 每月流量軟性上限為 100 GB。
 
 ## GitHub Pages 部署
 
@@ -282,7 +289,8 @@ VITE_BASE_PATH=/
 
 - `dist/index.html`
 - 8 大政策重要文字
-- 4 支正式政策影片
+- 3 支正式政策影片
+- 未上映影片沒有混入部署結果
 - 首頁人物影片
 - 全部海報與圖片
 - 原始素材與建置素材的檔案大小
