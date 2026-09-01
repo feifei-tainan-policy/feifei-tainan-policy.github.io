@@ -639,9 +639,10 @@ button:focus-visible {
 }
 
 .placeholderCopy small {
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 13px;
-  font-weight: 650;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.28em;
 }
 
 .ratioTag {

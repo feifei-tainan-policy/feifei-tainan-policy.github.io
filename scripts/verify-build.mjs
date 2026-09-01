@@ -12,16 +12,13 @@ const requiredPublicFiles = [
   "assets/feifei-hero.mp4",
   "assets/feifei-ip-board.png",
   "posters/agriculture.jpg",
-  "posters/sister-v2.jpg",
-  "posters/sister.jpg",
   "posters/technology.jpg",
-  "posters/welfare.jpg",
+  "posters/tourism.jpg",
   "videos/agriculture.mp4",
-  "videos/sister-v2.mp4",
   "videos/technology.mp4",
-  "videos/welfare.mp4",
+  "videos/tourism.mp4",
   "favicon.svg",
-];
+]
 
 for (const relativePath of requiredPublicFiles) {
   const sourcePath = new URL(relativePath, sourcePublic);
@@ -43,6 +40,14 @@ const html = readFileSync(indexPath, "utf8");
 assert.match(html, /<div id="root"><\/div>/);
 assert.match(html, /妃妃市長8大政策｜接棒台南/);
 assert.doesNotMatch(html, /chatgpt-auth|oai-authenticated-user/i);
+
+const unreleased = ["videos/welfare.mp4", "videos/sister-v2.mp4"];
+for (const relativePath of unreleased) {
+  assert(
+    !existsSync(new URL(relativePath, dist)),
+    `未上映影片不應出現在部署結果中: ${relativePath}`,
+  );
+}
 
 const bundleDirectory = fileURLToPath(new URL("assets/", dist));
 const bundleText = readdirSync(bundleDirectory)

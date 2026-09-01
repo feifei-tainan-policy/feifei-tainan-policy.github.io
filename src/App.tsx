@@ -163,7 +163,7 @@ function App() {
                 <div className="placeholderCopy">
                   <span>{active.english}</span>
                   <strong>{active.title}</strong>
-                  <small>政策影片即將上線</small>
+                  <small>COMING SOON</small>
                 </div>
                 <span className="ratioTag">16 : 9</span>
               </div>
@@ -186,7 +186,7 @@ function App() {
             </button>
             <div className={`videoStatus ${active.videoPath ? "online" : ""}`}>
               <span />
-              {active.videoPath ? "影片已上線" : "影片即將上線"}
+              {active.videoPath ? "影片已上線" : "Coming soon"}
             </div>
           </aside>
         </div>
