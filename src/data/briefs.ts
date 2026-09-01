@@ -82,48 +82,6 @@ export const policyBriefs: Record<string, PolicyBrief> = {
     source: "五大觀光軸新聞稿",
   },
 
-  culture: {
-    lead: "讓信仰、古蹟與職人文化，被保存，也走進新的生活。",
-    tags: ["宗教信仰", "古蹟街區", "文化地標", "巷弄職人"],
-    blocks: [
-      {
-        heading: "信仰與古蹟｜400 年的城市底蘊",
-        body: "台南歷史 400 年，擁有全台最深厚的歷史文化底蘊。宗教信仰與古蹟街區是城市記憶的核心，孔廟、赤崁五條港一帶已形成歷史與文創交織的城市核心。",
-      },
-      {
-        heading: "文化地標｜讓老建築有新的用途",
-        body: "林百貨、司法博物館等文化地標具備發展國際觀光的條件。文化保存不只是把空間留下來，而是讓保存下來的空間能重新走進當代生活。",
-      },
-      {
-        heading: "巷弄職人｜真正撐起城市魅力的人",
-        body: "支撐城市魅力的，是隱身在巷弄中的在地職人精神。讓文化不只被保存，也能被傳承、被轉譯成新一代看得懂的樣子。",
-      },
-    ],
-    source: "摘自五大觀光軸與政策總覽",
-    pending: true,
-  },
-
-  food: {
-    lead: "用台南味建立城市品牌，讓市場、店家與觀光一起成長。",
-    tags: ["米其林必比登 30+", "巷弄小吃", "傳統市場", "地方伴手禮"],
-    blocks: [
-      {
-        heading: "必比登之外｜魅力藏在巷弄裡",
-        body: "台南目前已有超過 30 家米其林必比登推薦餐廳，但真正支撐城市魅力的，是更多隱身巷弄中的在地美食與職人精神。",
-      },
-      {
-        heading: "從產地到餐桌｜串聯農漁特產",
-        body: "結合各區農漁特產、加工食品與地方伴手禮，讓旅客不只是「來過台南」，而是「帶得走記憶、記得住味道」。",
-      },
-      {
-        heading: "市場與店家｜讓在地一起成長",
-        body: "結合傳統市場的批發零售與網路世代的新型通路加強內銷，讓美食經濟回到地方店家，也讓農漁產品在盛產時能穩定去化。",
-      },
-    ],
-    source: "摘自五大觀光軸與四季農漁產",
-    pending: true,
-  },
-
   welfare: {
     lead: "對標六都，把台南不足的部分一項一項做到位。",
     tags: ["成立青年局", "重陽禮金", "敬老卡點數", "租屋地方加碼", "凍卵補助"],
@@ -197,19 +155,5 @@ export const policyBriefs: Record<string, PolicyBrief> = {
   },
 };
 
-/**
- * 目前顯示在網站上的政策文字重點。
- * 文化（culture）與美食（food）的內容已寫在上方，但尚無專屬新聞稿，
- * 暫不對外顯示；拿到正式稿件後，把 id 加進這份清單即可上線。
- */
-const publishedIds = new Set([
-  "technology",
-  "agriculture",
-  "tourism",
-  "welfare",
-  "transport",
-  "sister",
-]);
-
 export const getBriefById = (id: string): PolicyBrief | undefined =>
-  publishedIds.has(id) ? policyBriefs[id] : undefined;
+  policyBriefs[id];
