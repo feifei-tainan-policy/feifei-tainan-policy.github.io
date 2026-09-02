@@ -150,7 +150,12 @@ function App() {
                 <iframe
                   key={active.youtubeId}
                   className="youtubeFrame"
-                  src={`https://www.youtube-nocookie.com/embed/${active.youtubeId}?autoplay=1&rel=0&playsinline=1`}
+                  // 不使用 autoplay=1：YouTube 收到該參數會隱藏縮圖與播放鍵直接進入
+                  // 播放狀態，一旦播放沒能開始就停在全黑且無任何提示。iOS/WebKit
+                  // 不會把父頁面的點擊授權傳遞給跨網域 iframe，因此 LINE 內建
+                  // 瀏覽器上必然黑畫面。改為載入播放器本身的介面，讓使用者按
+                  // YouTube 的播放鍵，各家瀏覽器行為一致。
+                  src={`https://www.youtube-nocookie.com/embed/${active.youtubeId}?rel=0&playsinline=1`}
                   title={`${active.title}政策影片`}
                   allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
