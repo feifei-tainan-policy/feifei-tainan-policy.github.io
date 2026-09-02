@@ -12,10 +12,12 @@ function scrollToSection(id: string) {
 function App() {
   const [activeId, setActiveId] = useState(policies[0].id);
   const [isStageExpanded, setIsStageExpanded] = useState(false);
+  const [hasStartedVideo, setHasStartedVideo] = useState(false);
   const stageRef = useRef<HTMLElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  // 播放開始後才把封面淡出
-  const [isPlaying, setIsPlaying] = useState(false);
+  // "auto" 先嘗試自動播放；偵測到沒播起來就切成 "manual"，
+  // 讓 YouTube 顯示正常播放器介面，避免停在黑畫面。
+  const [playbackMode, setPlaybackMode] = useState<"auto" | "manual">("auto");
   const active = policies.find((policy) => policy.id === activeId) ?? policies[0];
 
   useEffect(() => {
@@ -30,43 +32,53 @@ function App() {
 
   const selectPolicy = (id: string) => {
     setActiveId(id);
-    setIsPlaying(false);
+    // 切換政策時收起已載入的 YouTube 播放器，避免上一支影片繼續播放
+    setHasStartedVideo(false);
+    setPlaybackMode("auto");
   };
 
-  // 封面是覆蓋在播放器上的裝飾層（pointer-events: none），使用者的點擊
-  // 會穿透到底下 YouTube 的播放鍵。那是 iframe 內的真實使用者操作，
-  // 行動瀏覽器不會阻擋，所以手機上同樣只需按一下。
-  //
-  // 這裡負責在播放真的開始之後把封面收掉。兩個訊號：
-  //   1. Player API 回報狀態為播放中或緩衝中（主要）
-  //   2. 視窗失焦且焦點落在 iframe 上（備援，涵蓋 API 載入失敗的情況）
+  // autoplay=1 能否成功依瀏覽器而異：可以的話直接播放（維持一鍵），
+  // 被擋下時 YouTube 會隱藏介面停在全黑。因此這裡用 Player API 監看
+  // 實際狀態，2.5 秒內沒真的播起來就切換成有介面的版本讓使用者自己按。
   useEffect(() => {
-    if (!active.youtubeId || isPlaying) return;
+    if (!hasStartedVideo || !active.youtubeId || playbackMode !== "auto") return;
 
     let cancelled = false;
-
-    const onBlur = () => {
-      if (document.activeElement === iframeRef.current) setIsPlaying(true);
-    };
-    window.addEventListener("blur", onBlur);
+    let timer = 0;
 
     loadYouTubeApi().then((YT) => {
-      if (cancelled || !YT || !iframeRef.current) return;
-      new YT.Player(iframeRef.current, {
+      if (cancelled) return;
+      const frame = iframeRef.current;
+      // API 載不進來時不要降級：此時無從判斷是否正在播放，貿然換掉
+      // iframe 會把已經順利播放的影片打斷。維持現狀較安全。
+      if (!YT || !frame) return;
+
+      const player = new YT.Player(frame, {
         events: {
           onStateChange: (event: { data: number }) => {
-            // 1 = 播放中，3 = 緩衝中
-            if (event.data === 1 || event.data === 3) setIsPlaying(true);
+            // 1 = 播放中，3 = 緩衝中，兩者都代表自動播放成功
+            if (event.data === 1 || event.data === 3) window.clearTimeout(timer);
           },
         },
       });
+
+      timer = window.setTimeout(() => {
+        if (cancelled) return;
+        let state = -1;
+        try {
+          state = player.getPlayerState?.() ?? -1;
+        } catch {
+          state = -1;
+        }
+        if (state !== 1 && state !== 3) setPlaybackMode("manual");
+      }, 2500);
     });
 
     return () => {
       cancelled = true;
-      window.removeEventListener("blur", onBlur);
+      window.clearTimeout(timer);
     };
-  }, [active.youtubeId, isPlaying]);
+  }, [hasStartedVideo, active.youtubeId, playbackMode]);
 
   const toggleFullscreen = async () => {
     if (isStageExpanded && !document.fullscreenElement) {
@@ -183,27 +195,33 @@ function App() {
         <div className="stageLayout">
           <div className="videoFrame">
             {active.youtubeId ? (
-              <>
+              hasStartedVideo ? (
                 <iframe
-                  key={active.youtubeId}
+                  key={`${active.youtubeId}-${playbackMode}`}
                   ref={iframeRef}
                   className="youtubeFrame"
-                  src={`https://www.youtube-nocookie.com/embed/${active.youtubeId}?rel=0&playsinline=1&enablejsapi=1`}
+                  src={`https://www.youtube-nocookie.com/embed/${
+                    active.youtubeId
+                  }?rel=0&playsinline=1&enablejsapi=1${
+                    playbackMode === "auto" ? "&autoplay=1" : ""
+                  }`}
                   title={`${active.title}政策影片`}
-                  loading="lazy"
                   allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 />
-                {!isPlaying && (
-                  <div className="videoFacade" aria-hidden="true">
-                    {active.posterPath && (
-                      <img src={assetUrl(active.posterPath)} alt="" />
-                    )}
-                    <span className="facadePlay" />
-                    <span className="facadeHint">4K 高畫質</span>
-                  </div>
-                )}
-              </>
+              ) : (
+                <button
+                  className="videoFacade"
+                  onClick={() => setHasStartedVideo(true)}
+                  aria-label={`播放${active.title}政策影片`}
+                >
+                  {active.posterPath && (
+                    <img src={assetUrl(active.posterPath)} alt="" />
+                  )}
+                  <span className="facadePlay" aria-hidden="true" />
+                  <span className="facadeHint">4K 高畫質</span>
+                </button>
+              )
             ) : active.videoPath ? (
               <video
                 key={active.videoPath}

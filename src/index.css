@@ -600,8 +600,8 @@ button:focus-visible {
 /* 影片框的高度由 ::before 的 padding 撐出，那個偽元素本身佔滿整個
    高度。因此所有實際內容都必須是絕對定位疊在上面，否則會被推到
    ::before 底下、再被 overflow: hidden 裁掉而看不見。
-   .videoPlaceholder 原本就是絕對定位；<video> 與 YouTube 的 <iframe>
-   也必須比照辦理。 */
+   .videoFacade 與 .videoPlaceholder 原本就是絕對定位；<video> 與
+   YouTube 的 <iframe> 也必須比照辦理。 */
 /* YouTube Player API 會把 .youtubeHost 這個 div 換成它自己產生的 iframe，
    class 會在替換時消失，因此改用元素選擇器涵蓋替換前後兩種狀態。 */
 .videoFrame video,
@@ -620,19 +620,15 @@ button:focus-visible {
   object-fit: contain;
 }
 
-/* 封面：覆蓋在 YouTube 播放器之上的裝飾層。
-   pointer-events: none 是整個做法的關鍵 —— 使用者看到的是網站自己的
-   色調與播放鍵，但點擊會直接穿透到底下 YouTube 的播放鍵。因為那是
-   iframe 內的真實使用者操作，行動瀏覽器不會像阻擋自動播放那樣攔下它，
-   所以手機與電腦一樣只需按一下。播放開始後這一層就會被移除。 */
 .videoFacade {
   position: absolute;
   inset: 0;
-  z-index: 1;
   display: block;
+  padding: 0;
+  border: 0;
   overflow: hidden;
   background: #07110b;
-  pointer-events: none;
+  cursor: pointer;
 }
 
 .videoFacade img {
@@ -640,6 +636,13 @@ button:focus-visible {
   height: 100%;
   display: block;
   object-fit: cover;
+  transition: transform 420ms cubic-bezier(0.2, 0.75, 0.2, 1), filter 260ms ease;
+}
+
+.videoFacade:hover img,
+.videoFacade:focus-visible img {
+  transform: scale(1.03);
+  filter: brightness(0.88);
 }
 
 .facadePlay {
@@ -652,6 +655,7 @@ button:focus-visible {
   border-radius: 50%;
   background: var(--active-accent);
   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.42);
+  transition: transform 240ms cubic-bezier(0.2, 0.75, 0.2, 1);
 }
 
 .facadePlay::after {
@@ -663,6 +667,11 @@ button:focus-visible {
   border-style: solid;
   border-width: 15px 0 15px 25px;
   border-color: transparent transparent transparent white;
+}
+
+.videoFacade:hover .facadePlay,
+.videoFacade:focus-visible .facadePlay {
+  transform: translate(-50%, -50%) scale(1.09);
 }
 
 .facadeHint {

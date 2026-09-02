@@ -1,14 +1,20 @@
 /**
  * 載入 YouTube IFrame Player API，並以 Promise 形式回傳全域的 YT 物件。
  *
- * 用途：監看播放器狀態。網站的封面是覆蓋在播放器上方的裝飾層，設為
- * pointer-events: none，使用者的點擊會直接穿透到底下 YouTube 自己的
- * 播放鍵（因此是 iframe 內的真實點擊，行動瀏覽器不會阻擋）。播放一旦
- * 開始，就靠這個 API 回報的狀態把封面淡出。
+ * 為什麼不直接用 autoplay=1：該參數會讓 YouTube 隱藏縮圖與播放鍵、直接
+ * 進入播放狀態，一旦播放沒能開始（iOS/WebKit 不會把父頁面的點擊授權傳給
+ * 跨網域 iframe），畫面就永遠停在全黑且沒有任何可點擊的東西。
+ *
+ * 改用 Player API：播放器介面照常載入，再由程式呼叫 playVideo()。允許的
+ * 瀏覽器會立刻開始播放（維持一鍵體驗），被擋下的則會看到完整播放器，
+ * 使用者可自行按播放，不會出現黑畫面。
  */
 type YouTubeApi = {
-  Player: new (el: HTMLElement, options: Record<string, unknown>) => {
-    playVideo?: () => void;
+  Player: new (
+    el: HTMLElement,
+    options: Record<string, unknown>,
+  ) => {
+    getPlayerState?: () => number;
     destroy?: () => void;
   };
 };
