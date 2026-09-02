@@ -8,6 +8,6 @@ export const siteConfig = {
     heroPoster: "assets/feifei-brand.jpg",
     ipBoardImage: "assets/feifei-ip-board.png",
     legacySisterPoster: "posters/sister.jpg",
-    favicon: "favicon.svg",
+    favicon: "favicon.ico",
   },
 } as const;

@@ -1,0 +1,14 @@
+{
+  "name": "妃妃市長8大政策｜接棒台南",
+  "short_name": "妃妃市長",
+  "description": "台南400年第一位女市長｜陳亭妃八大政策影片展示區",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f6f1",
+  "theme_color": "#176b38",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
