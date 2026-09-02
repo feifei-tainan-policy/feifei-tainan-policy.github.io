@@ -569,7 +569,13 @@ button:focus-visible {
 .videoFrame {
   position: relative;
   aspect-ratio: 16 / 9;
-  /* aspect-ratio 若不被支援，高度會是 0；保底讓播放器仍佔得住版面 */
+  /* 這一格的子元素全是 position: absolute，本身沒有文件流高度。
+     若被 grid 的 align-items: stretch 拉伸，列高會由內容決定而變成 0，
+     aspect-ratio 就沒有機會生效，整個播放器會塌掉看不見（手機單欄時
+     尤其明顯，因為這一列只有它自己）。align-self: start 讓它保持
+     自身尺寸，由 aspect-ratio 決定高度。 */
+  align-self: start;
+  /* 再加一層保底：任何情況下都不會完全歸零 */
   min-height: 180px;
   overflow: hidden;
   background: #07110b;
@@ -950,10 +956,6 @@ footer p {
 
   .policyInfo {
     min-height: 330px;
-  }
-
-  .videoFrame {
-    min-height: 0;
   }
 
   .policySwitcher {
