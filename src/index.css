@@ -602,8 +602,11 @@ button:focus-visible {
    ::before 底下、再被 overflow: hidden 裁掉而看不見。
    .videoFacade 與 .videoPlaceholder 原本就是絕對定位；<video> 與
    YouTube 的 <iframe> 也必須比照辦理。 */
+/* YouTube Player API 會把 .youtubeHost 這個 div 換成它自己產生的 iframe，
+   class 會在替換時消失，因此改用元素選擇器涵蓋替換前後兩種狀態。 */
 .videoFrame video,
-.youtubeFrame {
+.videoFrame iframe,
+.youtubeHost {
   position: absolute;
   inset: 0;
   width: 100%;

@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { policies } from "./data/policies";
 import { siteConfig } from "./data/site";
 import { assetUrl } from "./lib/assets";
+import { loadYouTubeApi } from "./lib/youtube";
 
 function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -13,6 +14,8 @@ function App() {
   const [isStageExpanded, setIsStageExpanded] = useState(false);
   const [hasStartedVideo, setHasStartedVideo] = useState(false);
   const stageRef = useRef<HTMLElement>(null);
+  const playerHostRef = useRef<HTMLDivElement>(null);
+  const [apiFailed, setApiFailed] = useState(false);
   const active = policies.find((policy) => policy.id === activeId) ?? policies[0];
 
   useEffect(() => {
@@ -29,7 +32,43 @@ function App() {
     setActiveId(id);
     // 切換政策時收起已載入的 YouTube 播放器，避免上一支影片繼續播放
     setHasStartedVideo(false);
+    setApiFailed(false);
   };
+
+  // 使用者按下封面後才載入播放器：先讓 YouTube 的介面正常出現，再以
+  // Player API 下達播放指令。允許的瀏覽器會直接開始播（維持一鍵體驗），
+  // 被瀏覽器擋下時仍看得到完整播放器，不會變成黑畫面。
+  useEffect(() => {
+    if (!hasStartedVideo || !active.youtubeId) return;
+
+    let cancelled = false;
+    let player: { destroy?: () => void } | null = null;
+
+    loadYouTubeApi().then((YT) => {
+      if (cancelled) return;
+      const host = playerHostRef.current;
+      if (!YT || !host) {
+        // API 載入失敗就退回單純的 iframe，至少影片仍可播放
+        setApiFailed(true);
+        return;
+      }
+      player = new YT.Player(host, {
+        videoId: active.youtubeId,
+        host: "https://www.youtube-nocookie.com",
+        playerVars: { rel: 0, playsinline: 1 },
+        events: {
+          onReady: (event: { target: { playVideo?: () => void } }) => {
+            event.target.playVideo?.();
+          },
+        },
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      player?.destroy?.();
+    };
+  }, [hasStartedVideo, active.youtubeId]);
 
   const toggleFullscreen = async () => {
     if (isStageExpanded && !document.fullscreenElement) {
@@ -147,19 +186,22 @@ function App() {
           <div className="videoFrame">
             {active.youtubeId ? (
               hasStartedVideo ? (
-                <iframe
-                  key={active.youtubeId}
-                  className="youtubeFrame"
-                  // 不使用 autoplay=1：YouTube 收到該參數會隱藏縮圖與播放鍵直接進入
-                  // 播放狀態，一旦播放沒能開始就停在全黑且無任何提示。iOS/WebKit
-                  // 不會把父頁面的點擊授權傳遞給跨網域 iframe，因此 LINE 內建
-                  // 瀏覽器上必然黑畫面。改為載入播放器本身的介面，讓使用者按
-                  // YouTube 的播放鍵，各家瀏覽器行為一致。
-                  src={`https://www.youtube-nocookie.com/embed/${active.youtubeId}?rel=0&playsinline=1`}
-                  title={`${active.title}政策影片`}
-                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
+                apiFailed ? (
+                  <iframe
+                    key={active.youtubeId}
+                    className="youtubeFrame"
+                    src={`https://www.youtube-nocookie.com/embed/${active.youtubeId}?rel=0&playsinline=1`}
+                    title={`${active.title}政策影片`}
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div
+                    key={active.youtubeId}
+                    className="youtubeHost"
+                    ref={playerHostRef}
+                  />
+                )
               ) : (
                 <button
                   className="videoFacade"
