@@ -568,18 +568,33 @@ button:focus-visible {
 
 .videoFrame {
   position: relative;
+  /* 高度來源有兩層，缺一不可：
+
+     1. ::before 的 padding-top: 56.25%
+        百分比 padding 是相對「自身寬度」計算的，56.25% 剛好是 9/16。
+        它是實際存在於文件流中的內容，因此 .videoFrame 永遠有真實高度，
+        不依賴任何較新的 CSS 特性，所有瀏覽器引擎行為一致。
+
+     2. aspect-ratio 與 align-self: start
+        現代引擎用得上，語意也較清楚。align-self 是必要的：這一格的
+        子元素全是 position: absolute，若被 grid 的 align-items: stretch
+        拉伸，列高會由內容決定，在部分引擎（WebKit）會算成 0 而整塊塌掉。
+
+     背景：2026-09-01 改用 YouTube 封面先行載入後，播放區從佔文件流的
+     <video> 換成絕對定位的 <button>，.videoFrame 因此失去內容高度，
+     在 iPhone 上整個播放器消失。Chrome 無法重現，只有 WebKit 會壞。 */
   aspect-ratio: 16 / 9;
-  /* 這一格的子元素全是 position: absolute，本身沒有文件流高度。
-     若被 grid 的 align-items: stretch 拉伸，列高會由內容決定而變成 0，
-     aspect-ratio 就沒有機會生效，整個播放器會塌掉看不見（手機單欄時
-     尤其明顯，因為這一列只有它自己）。align-self: start 讓它保持
-     自身尺寸，由 aspect-ratio 決定高度。 */
   align-self: start;
-  /* 再加一層保底：任何情況下都不會完全歸零 */
   min-height: 180px;
   overflow: hidden;
   background: #07110b;
   box-shadow: 0 26px 70px rgba(0, 0, 0, 0.35);
+}
+
+.videoFrame::before {
+  content: "";
+  display: block;
+  padding-top: 56.25%;
 }
 
 .videoFrame video {
