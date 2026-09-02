@@ -3,7 +3,6 @@ import type { CSSProperties } from "react";
 import { policies } from "./data/policies";
 import { siteConfig } from "./data/site";
 import { assetUrl } from "./lib/assets";
-import { loadYouTubeApi } from "./lib/youtube";
 
 function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -12,12 +11,7 @@ function scrollToSection(id: string) {
 function App() {
   const [activeId, setActiveId] = useState(policies[0].id);
   const [isStageExpanded, setIsStageExpanded] = useState(false);
-  const [hasStartedVideo, setHasStartedVideo] = useState(false);
   const stageRef = useRef<HTMLElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  // "auto" 先嘗試自動播放；偵測到沒播起來就切成 "manual"，
-  // 讓 YouTube 顯示正常播放器介面，避免停在黑畫面。
-  const [playbackMode, setPlaybackMode] = useState<"auto" | "manual">("auto");
   const active = policies.find((policy) => policy.id === activeId) ?? policies[0];
 
   useEffect(() => {
@@ -32,53 +26,7 @@ function App() {
 
   const selectPolicy = (id: string) => {
     setActiveId(id);
-    // 切換政策時收起已載入的 YouTube 播放器，避免上一支影片繼續播放
-    setHasStartedVideo(false);
-    setPlaybackMode("auto");
   };
-
-  // autoplay=1 能否成功依瀏覽器而異：可以的話直接播放（維持一鍵），
-  // 被擋下時 YouTube 會隱藏介面停在全黑。因此這裡用 Player API 監看
-  // 實際狀態，2.5 秒內沒真的播起來就切換成有介面的版本讓使用者自己按。
-  useEffect(() => {
-    if (!hasStartedVideo || !active.youtubeId || playbackMode !== "auto") return;
-
-    let cancelled = false;
-    let timer = 0;
-
-    loadYouTubeApi().then((YT) => {
-      if (cancelled) return;
-      const frame = iframeRef.current;
-      // API 載不進來時不要降級：此時無從判斷是否正在播放，貿然換掉
-      // iframe 會把已經順利播放的影片打斷。維持現狀較安全。
-      if (!YT || !frame) return;
-
-      const player = new YT.Player(frame, {
-        events: {
-          onStateChange: (event: { data: number }) => {
-            // 1 = 播放中，3 = 緩衝中，兩者都代表自動播放成功
-            if (event.data === 1 || event.data === 3) window.clearTimeout(timer);
-          },
-        },
-      });
-
-      timer = window.setTimeout(() => {
-        if (cancelled) return;
-        let state = -1;
-        try {
-          state = player.getPlayerState?.() ?? -1;
-        } catch {
-          state = -1;
-        }
-        if (state !== 1 && state !== 3) setPlaybackMode("manual");
-      }, 2500);
-    });
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, [hasStartedVideo, active.youtubeId, playbackMode]);
 
   const toggleFullscreen = async () => {
     if (isStageExpanded && !document.fullscreenElement) {
@@ -195,33 +143,19 @@ function App() {
         <div className="stageLayout">
           <div className="videoFrame">
             {active.youtubeId ? (
-              hasStartedVideo ? (
-                <iframe
-                  key={`${active.youtubeId}-${playbackMode}`}
-                  ref={iframeRef}
-                  className="youtubeFrame"
-                  src={`https://www.youtube-nocookie.com/embed/${
-                    active.youtubeId
-                  }?rel=0&playsinline=1&enablejsapi=1${
-                    playbackMode === "auto" ? "&autoplay=1" : ""
-                  }`}
-                  title={`${active.title}政策影片`}
-                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              ) : (
-                <button
-                  className="videoFacade"
-                  onClick={() => setHasStartedVideo(true)}
-                  aria-label={`播放${active.title}政策影片`}
-                >
-                  {active.posterPath && (
-                    <img src={assetUrl(active.posterPath)} alt="" />
-                  )}
-                  <span className="facadePlay" aria-hidden="true" />
-                  <span className="facadeHint">4K 高畫質</span>
-                </button>
-              )
+              // 直接載入 YouTube 播放器，不再用自製封面。行動瀏覽器一律禁止
+              // 帶聲音的自動播放，封面會讓使用者必須先點封面、再點 YouTube 的
+              // 播放鍵；直接顯示播放器可讓那一下就落在播放鍵上。
+              // loading="lazy" 讓播放器等捲動接近時才連線，首頁載入不受影響。
+              <iframe
+                key={active.youtubeId}
+                className="youtubeFrame"
+                src={`https://www.youtube-nocookie.com/embed/${active.youtubeId}?rel=0&playsinline=1`}
+                title={`${active.title}政策影片`}
+                loading="lazy"
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
             ) : active.videoPath ? (
               <video
                 key={active.videoPath}
