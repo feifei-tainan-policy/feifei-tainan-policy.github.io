@@ -557,7 +557,11 @@ button:focus-visible {
 
 .stageLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.45fr);
+  /* 右欄不設固定最小寬度：若手機版的 media query 因故失效，300px 的
+     下限會吃光空間、把左邊的影片欄壓成 0 寬，整個播放器連同 16:9 的
+     高度一起消失。改用 minmax(0, ...) 讓兩欄一起等比縮，桌機寬度下
+     兩者的計算結果相差不到 1px。 */
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 0.45fr);
   gap: 30px;
   align-items: stretch;
 }
@@ -565,6 +569,8 @@ button:focus-visible {
 .videoFrame {
   position: relative;
   aspect-ratio: 16 / 9;
+  /* aspect-ratio 若不被支援，高度會是 0；保底讓播放器仍佔得住版面 */
+  min-height: 180px;
   overflow: hidden;
   background: #07110b;
   box-shadow: 0 26px 70px rgba(0, 0, 0, 0.35);
@@ -944,6 +950,10 @@ footer p {
 
   .policyInfo {
     min-height: 330px;
+  }
+
+  .videoFrame {
+    min-height: 0;
   }
 
   .policySwitcher {
