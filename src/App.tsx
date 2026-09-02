@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { policies } from "./data/policies";
 import { siteConfig } from "./data/site";
 import { assetUrl } from "./lib/assets";
+import { loadYouTubeApi } from "./lib/youtube";
 
 function scrollToSection(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -12,6 +13,9 @@ function App() {
   const [activeId, setActiveId] = useState(policies[0].id);
   const [isStageExpanded, setIsStageExpanded] = useState(false);
   const stageRef = useRef<HTMLElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  // 播放開始後才把封面淡出
+  const [isPlaying, setIsPlaying] = useState(false);
   const active = policies.find((policy) => policy.id === activeId) ?? policies[0];
 
   useEffect(() => {
@@ -26,7 +30,43 @@ function App() {
 
   const selectPolicy = (id: string) => {
     setActiveId(id);
+    setIsPlaying(false);
   };
+
+  // 封面是覆蓋在播放器上的裝飾層（pointer-events: none），使用者的點擊
+  // 會穿透到底下 YouTube 的播放鍵。那是 iframe 內的真實使用者操作，
+  // 行動瀏覽器不會阻擋，所以手機上同樣只需按一下。
+  //
+  // 這裡負責在播放真的開始之後把封面收掉。兩個訊號：
+  //   1. Player API 回報狀態為播放中或緩衝中（主要）
+  //   2. 視窗失焦且焦點落在 iframe 上（備援，涵蓋 API 載入失敗的情況）
+  useEffect(() => {
+    if (!active.youtubeId || isPlaying) return;
+
+    let cancelled = false;
+
+    const onBlur = () => {
+      if (document.activeElement === iframeRef.current) setIsPlaying(true);
+    };
+    window.addEventListener("blur", onBlur);
+
+    loadYouTubeApi().then((YT) => {
+      if (cancelled || !YT || !iframeRef.current) return;
+      new YT.Player(iframeRef.current, {
+        events: {
+          onStateChange: (event: { data: number }) => {
+            // 1 = 播放中，3 = 緩衝中
+            if (event.data === 1 || event.data === 3) setIsPlaying(true);
+          },
+        },
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("blur", onBlur);
+    };
+  }, [active.youtubeId, isPlaying]);
 
   const toggleFullscreen = async () => {
     if (isStageExpanded && !document.fullscreenElement) {
@@ -143,19 +183,27 @@ function App() {
         <div className="stageLayout">
           <div className="videoFrame">
             {active.youtubeId ? (
-              // 直接載入 YouTube 播放器，不再用自製封面。行動瀏覽器一律禁止
-              // 帶聲音的自動播放，封面會讓使用者必須先點封面、再點 YouTube 的
-              // 播放鍵；直接顯示播放器可讓那一下就落在播放鍵上。
-              // loading="lazy" 讓播放器等捲動接近時才連線，首頁載入不受影響。
-              <iframe
-                key={active.youtubeId}
-                className="youtubeFrame"
-                src={`https://www.youtube-nocookie.com/embed/${active.youtubeId}?rel=0&playsinline=1`}
-                title={`${active.title}政策影片`}
-                loading="lazy"
-                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
+              <>
+                <iframe
+                  key={active.youtubeId}
+                  ref={iframeRef}
+                  className="youtubeFrame"
+                  src={`https://www.youtube-nocookie.com/embed/${active.youtubeId}?rel=0&playsinline=1&enablejsapi=1`}
+                  title={`${active.title}政策影片`}
+                  loading="lazy"
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+                {!isPlaying && (
+                  <div className="videoFacade" aria-hidden="true">
+                    {active.posterPath && (
+                      <img src={assetUrl(active.posterPath)} alt="" />
+                    )}
+                    <span className="facadePlay" />
+                    <span className="facadeHint">4K 高畫質</span>
+                  </div>
+                )}
+              </>
             ) : active.videoPath ? (
               <video
                 key={active.videoPath}
