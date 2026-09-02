@@ -10,8 +10,11 @@
  * 使用者可自行按播放，不會出現黑畫面。
  */
 type YouTubeApi = {
-  Player: new (el: HTMLElement, options: Record<string, unknown>) => {
-    playVideo?: () => void;
+  Player: new (
+    el: HTMLElement,
+    options: Record<string, unknown>,
+  ) => {
+    getPlayerState?: () => number;
     destroy?: () => void;
   };
 };

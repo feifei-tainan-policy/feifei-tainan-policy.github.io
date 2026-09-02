@@ -14,8 +14,10 @@ function App() {
   const [isStageExpanded, setIsStageExpanded] = useState(false);
   const [hasStartedVideo, setHasStartedVideo] = useState(false);
   const stageRef = useRef<HTMLElement>(null);
-  const playerHostRef = useRef<HTMLDivElement>(null);
-  const [apiFailed, setApiFailed] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  // "auto" 先嘗試自動播放；偵測到沒播起來就切成 "manual"，
+  // 讓 YouTube 顯示正常播放器介面，避免停在黑畫面。
+  const [playbackMode, setPlaybackMode] = useState<"auto" | "manual">("auto");
   const active = policies.find((policy) => policy.id === activeId) ?? policies[0];
 
   useEffect(() => {
@@ -32,43 +34,51 @@ function App() {
     setActiveId(id);
     // 切換政策時收起已載入的 YouTube 播放器，避免上一支影片繼續播放
     setHasStartedVideo(false);
-    setApiFailed(false);
+    setPlaybackMode("auto");
   };
 
-  // 使用者按下封面後才載入播放器：先讓 YouTube 的介面正常出現，再以
-  // Player API 下達播放指令。允許的瀏覽器會直接開始播（維持一鍵體驗），
-  // 被瀏覽器擋下時仍看得到完整播放器，不會變成黑畫面。
+  // autoplay=1 能否成功依瀏覽器而異：可以的話直接播放（維持一鍵），
+  // 被擋下時 YouTube 會隱藏介面停在全黑。因此這裡用 Player API 監看
+  // 實際狀態，2.5 秒內沒真的播起來就切換成有介面的版本讓使用者自己按。
   useEffect(() => {
-    if (!hasStartedVideo || !active.youtubeId) return;
+    if (!hasStartedVideo || !active.youtubeId || playbackMode !== "auto") return;
 
     let cancelled = false;
-    let player: { destroy?: () => void } | null = null;
+    let timer = 0;
 
     loadYouTubeApi().then((YT) => {
       if (cancelled) return;
-      const host = playerHostRef.current;
-      if (!YT || !host) {
-        // API 載入失敗就退回單純的 iframe，至少影片仍可播放
-        setApiFailed(true);
-        return;
-      }
-      player = new YT.Player(host, {
-        videoId: active.youtubeId,
-        host: "https://www.youtube-nocookie.com",
-        playerVars: { rel: 0, playsinline: 1 },
+      const frame = iframeRef.current;
+      // API 載不進來時不要降級：此時無從判斷是否正在播放，貿然換掉
+      // iframe 會把已經順利播放的影片打斷。維持現狀較安全。
+      if (!YT || !frame) return;
+
+      const player = new YT.Player(frame, {
         events: {
-          onReady: (event: { target: { playVideo?: () => void } }) => {
-            event.target.playVideo?.();
+          onStateChange: (event: { data: number }) => {
+            // 1 = 播放中，3 = 緩衝中，兩者都代表自動播放成功
+            if (event.data === 1 || event.data === 3) window.clearTimeout(timer);
           },
         },
       });
+
+      timer = window.setTimeout(() => {
+        if (cancelled) return;
+        let state = -1;
+        try {
+          state = player.getPlayerState?.() ?? -1;
+        } catch {
+          state = -1;
+        }
+        if (state !== 1 && state !== 3) setPlaybackMode("manual");
+      }, 2500);
     });
 
     return () => {
       cancelled = true;
-      player?.destroy?.();
+      window.clearTimeout(timer);
     };
-  }, [hasStartedVideo, active.youtubeId]);
+  }, [hasStartedVideo, active.youtubeId, playbackMode]);
 
   const toggleFullscreen = async () => {
     if (isStageExpanded && !document.fullscreenElement) {
@@ -186,22 +196,19 @@ function App() {
           <div className="videoFrame">
             {active.youtubeId ? (
               hasStartedVideo ? (
-                apiFailed ? (
-                  <iframe
-                    key={active.youtubeId}
-                    className="youtubeFrame"
-                    src={`https://www.youtube-nocookie.com/embed/${active.youtubeId}?rel=0&playsinline=1`}
-                    title={`${active.title}政策影片`}
-                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                ) : (
-                  <div
-                    key={active.youtubeId}
-                    className="youtubeHost"
-                    ref={playerHostRef}
-                  />
-                )
+                <iframe
+                  key={`${active.youtubeId}-${playbackMode}`}
+                  ref={iframeRef}
+                  className="youtubeFrame"
+                  src={`https://www.youtube-nocookie.com/embed/${
+                    active.youtubeId
+                  }?rel=0&playsinline=1&enablejsapi=1${
+                    playbackMode === "auto" ? "&autoplay=1" : ""
+                  }`}
+                  title={`${active.title}政策影片`}
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
               ) : (
                 <button
                   className="videoFacade"
