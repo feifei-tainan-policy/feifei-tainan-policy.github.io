@@ -170,33 +170,6 @@
     border:0; display:block;
   }
 
-  /* 影片載入期間的封面。蓋住 YouTube 自己的載入／品牌畫面，真正開始播
-     才淡出。pointer-events:none 讓點擊能穿透到播放器——萬一自動播放被擋，
-     使用者仍然按得到 YouTube 的播放鍵，不會被這層擋住。 */
-  .lb-poster{
-    position:absolute; inset:0; z-index:1;
-    width:100%; height:100%;
-    object-fit:cover;                 /* 裁掉 YouTube 縮圖的 4:3 上下黑邊 */
-    background:#07110b;
-    opacity:1; transition:opacity .32s ease;
-    pointer-events:none;
-  }
-  .lb-poster.gone{ opacity:0; }
-
-  /* 自動播放被瀏覽器擋掉、改以靜音播放時出現的開聲按鈕 */
-  .lb-unmute{
-    position:absolute; left:50%; bottom:14%; z-index:2;
-    transform:translateX(-50%);
-    display:inline-flex; align-items:center; gap:.6em;
-    padding:.9em 1.5em;
-    font: inherit; font-size:clamp(12px,1.7vmin,18px);
-    font-weight:900; letter-spacing:.06em;
-    color:#fff; background:var(--accent); border:0; cursor:pointer;
-    box-shadow:0 1.2vmin 3vmin rgba(0,0,0,.5);
-  }
-  .lb-unmute:hover{ filter:brightness(1.08); }
-  .lb-unmute:focus-visible{ outline:3px solid #fff; outline-offset:3px; }
-
   /* 用 file:// 直接開啟時的替代畫面（YouTube 不允許本機檔案嵌入播放）*/
   .lb-fallback{
     position:absolute; inset:0;
@@ -339,8 +312,6 @@
   var clearTimer = null;
   var player = null;      /* YouTube IFrame API 播放器 */
   var watchdog = 0;
-  var posterEl = null;    /* 載入期間的封面圖 */
-  var posterTimer = 0;
   var currentKey = null;
 
   /* ---------------------------------------------------------
@@ -377,27 +348,8 @@
   }
   /* 開頁時就先把 API 載好，按下卡片時才不用等 */
   if (location.protocol !== "file:"){
-    if (window.requestIdleCallback) requestIdleCallback(function(){ loadYT(); preloadPosters(); });
-    else setTimeout(function(){ loadYT(); preloadPosters(); }, 1200);
-  }
-
-  function posterUrl(id, small){
-    return "https://i.ytimg.com/vi/" + id + "/" + (small ? "hqdefault" : "sddefault") + ".jpg";
-  }
-
-  /* 開頁時先把封面圖抓進快取，點下去才能立刻顯示，不會露出 YouTube 載入畫面 */
-  function preloadPosters(){
-    for (var k in VIDEOS){
-      if (VIDEOS[k].youtubeId){ var im = new Image(); im.src = posterUrl(VIDEOS[k].youtubeId); }
-    }
-  }
-
-  function dropPoster(){
-    clearTimeout(posterTimer);
-    if (!posterEl) return;
-    var el = posterEl; posterEl = null;
-    el.classList.add("gone");
-    setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+    if (window.requestIdleCallback) requestIdleCallback(function(){ loadYT(); });
+    else setTimeout(loadYT, 1200);
   }
 
   /* API 載不進來時的退路：autoplay=1 會讓 YouTube 藏起縮圖與播放鍵，
@@ -409,20 +361,6 @@
     if (!v || !f || !lb.classList.contains("open")) return;
     f.src = "https://www.youtube-nocookie.com/embed/" + v.youtubeId +
             "?rel=0&playsinline=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
-    dropPoster();
-  }
-
-  function showUnmuteButton(){
-    if (lbFrame.querySelector(".lb-unmute")) return;
-    var chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "lb-unmute";
-    chip.textContent = "🔇 點一下開啟聲音";
-    chip.addEventListener("click", function(){
-      try{ player.unMute(); player.setVolume(100); player.playVideo(); }catch(err){}
-      chip.remove();
-    });
-    lbFrame.appendChild(chip);
   }
 
   function attachPlayer(iframeEl){
@@ -436,7 +374,6 @@
             onReady: function(e){ try{ e.target.playVideo(); }catch(err){} },
             onStateChange: function(e){
               if (e.data === 1 || e.data === 3) clearTimeout(watchdog);  /* 播放中 / 緩衝中 */
-              if (e.data === 1) dropPoster();   /* 真的開始播了才收掉封面 */
             }
           }
         });
@@ -459,8 +396,10 @@
           return;
         }
 
-        /* 確定是自動播放被擋 → 改靜音播放，並提供開聲音按鈕 */
-        try{ player.mute(); player.playVideo(); showUnmuteButton(); }catch(err){}
+        /* 確定是自動播放被擋。不改成靜音播放——沒有聲音的政見影片沒有意義。
+           改載入不帶 autoplay 的版本，YouTube 會顯示正常播放器介面，
+           使用者按一下就能有聲播放，不會停在無處可點的黑畫面。 */
+        fallbackToManual();
       }, 2200);
     });
   }
@@ -494,12 +433,6 @@
     var v = VIDEOS[key];
     if (!v || !v.youtubeId) return;
     currentKey = key;
-
-    /* 必須在使用者點擊的當下同步呼叫，瀏覽器才會允許進入全螢幕。
-       若整頁本來就已是全螢幕（現場展示模式），就不重複要求，
-       這樣關掉影片後也不會把原本的全螢幕一起退掉。 */
-    if (IMMERSIVE && !isFs()) weEnteredFs = enterFs();
-    lb.classList.toggle("fs-on", isFs() || weEnteredFs);
 
     clearTimeout(clearTimer);
     lb.style.setProperty("--accent", v.accent);
@@ -538,18 +471,15 @@
       f.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
       f.setAttribute("allowfullscreen", "");
       f.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-      var poster = document.createElement("img");
-      poster.className = "lb-poster";
-      poster.alt = "";
-      poster.src = posterUrl(v.youtubeId);
-      poster.addEventListener("error", function(){
-        poster.src = posterUrl(v.youtubeId, true);   /* sddefault 沒有就退 hqdefault */
-      }, { once: true });
+      lbFrame.replaceChildren(f);
 
-      lbFrame.replaceChildren(f, poster);   /* 封面疊在 iframe 之上 */
-      posterEl = poster;
-      clearTimeout(posterTimer);
-      posterTimer = setTimeout(dropPoster, 8000);   /* 保險：封面絕不會卡住不走 */
+      /* 順序很重要：iframe 必須先建立，全螢幕才能後要求。
+         反過來的話 requestFullscreen() 會先吃掉這次點擊的使用者手勢授權，
+         之後建立的 iframe 就拿不到自動播放權限，變成有聲播放被擋、
+         YouTube 跳出預覽圖與播放鍵。實測順序對調即可同時保住全螢幕與聲音。 */
+      if (IMMERSIVE && !isFs()) weEnteredFs = enterFs();
+      lb.classList.toggle("fs-on", isFs() || weEnteredFs);
+
       attachPlayer(f);
     }
 
@@ -562,8 +492,6 @@
   function closeVideo(){
     if (!lb.classList.contains("open")) return;
     clearTimeout(watchdog);
-    clearTimeout(posterTimer);
-    posterEl = null;
     try{ if (player && player.stopVideo) player.stopVideo(); }catch(err){}   /* 立刻停聲 */
     if (weEnteredFs){ weEnteredFs = false; leaveFs(); }
     lb.classList.remove("open");
