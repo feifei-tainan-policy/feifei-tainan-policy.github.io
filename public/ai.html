@@ -172,7 +172,8 @@
 
   /* 自動播放被瀏覽器擋掉、改以靜音播放時出現的開聲按鈕 */
   .lb-unmute{
-    position:absolute; left:2.2vmin; bottom:2.2vmin; z-index:2;
+    position:absolute; left:50%; bottom:14%; z-index:2;
+    transform:translateX(-50%);
     display:inline-flex; align-items:center; gap:.6em;
     padding:.9em 1.5em;
     font: inherit; font-size:clamp(12px,1.7vmin,18px);
@@ -208,6 +209,26 @@
   }
   .lb-yt:hover{ transform:translateY(-3px); filter:brightness(1.08); }
   .lb-yt:focus-visible{ outline:3px solid #fff; outline-offset:3px; }
+
+  /* 全螢幕播放：影片填滿整個畫面，標題列改成浮在上方的覆蓋層 */
+  .lb.fs-on{ padding:0; }
+  .lb.fs-on .lb-panel{ width: min(100vw, calc(100vh * 16 / 9)); }
+  .lb.fs-on .lb-head{
+    position:absolute; top:0; left:0; right:0; z-index:3;
+    margin:0; padding:2vmin 2.2vmin;
+    justify-content:flex-end;
+    background:none;
+    pointer-events:none;              /* 空白處讓點擊穿透到影片 */
+  }
+  .lb.fs-on .lb-dot,
+  .lb.fs-on .lb-title{ display:none; } /* YouTube 播放器本身已有標題，不重複 */
+  .lb.fs-on .lb-close{
+    pointer-events:auto;
+    background:rgba(5,11,7,.72);
+    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px);
+  }
+  .lb.fs-on .lb-frame{ box-shadow:none; }
 
   /* ===================== 提示訊息 ===================== */
   .toast{
@@ -281,6 +302,9 @@
      ID = 網址 https://www.youtube.com/watch?v=XXXXXXXXXXX 中 v= 後面那 11 碼。
      留空字串 ""，該卡片點下去會顯示「影片即將上線」。
      ========================================================= */
+  /* 點擊卡片時是否自動進入全螢幕播放。不想要就改成 false。 */
+  var IMMERSIVE = true;
+
   var VIDEOS = {
     tech:      { title: "科技妃妃 · 科技三軸",   youtubeId: "def_D9jXjqk", accent: "#41d450" },
     agri:      { title: "農漁妃妃 · 四季農漁",   youtubeId: "mwE0XiAuoCg", accent: "#f0a81e" },
@@ -421,6 +445,12 @@
     var v = VIDEOS[key];
     if (!v || !v.youtubeId) return;
 
+    /* 必須在使用者點擊的當下同步呼叫，瀏覽器才會允許進入全螢幕。
+       若整頁本來就已是全螢幕（現場展示模式），就不重複要求，
+       這樣關掉影片後也不會把原本的全螢幕一起退掉。 */
+    if (IMMERSIVE && !isFs()) weEnteredFs = enterFs();
+    lb.classList.toggle("fs-on", isFs() || weEnteredFs);
+
     clearTimeout(clearTimer);
     lb.style.setProperty("--accent", v.accent);
     lbTitle.textContent = v.title;
@@ -472,6 +502,7 @@
     if (!lb.classList.contains("open")) return;
     clearTimeout(watchdog);
     try{ if (player && player.stopVideo) player.stopVideo(); }catch(err){}   /* 立刻停聲 */
+    if (weEnteredFs){ weEnteredFs = false; leaveFs(); }
     lb.classList.remove("open");
     lb.setAttribute("aria-hidden", "true");
     clearTimer = setTimeout(function(){
@@ -492,16 +523,47 @@
     toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2400);
   }
 
-  /* 全螢幕 */
-  function toggleFullscreen(){
+  /* ---------------- 全螢幕 ---------------- */
+  var weEnteredFs = false;   /* 全螢幕是不是「因為播放影片」才進去的 */
+
+  function isFs(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+
+  function enterFs(){
     var el = document.documentElement;
-    if (document.fullscreenElement || document.webkitFullscreenElement){
-      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-    } else {
-      (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
-    }
+    var fn = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!fn) return false;
+    try{
+      var r = fn.call(el);
+      if (r && r.catch) r.catch(function(){});
+      return true;
+    }catch(err){ return false; }
+  }
+
+  function leaveFs(){
+    var fn = document.exitFullscreen || document.webkitExitFullscreen;
+    if (!fn) return;
+    try{
+      var r = fn.call(document);
+      if (r && r.catch) r.catch(function(){});
+    }catch(err){}
+  }
+
+  function toggleFullscreen(){
+    if (isFs()) { weEnteredFs = false; leaveFs(); }
+    else enterFs();
   }
   fsBtn.addEventListener("click", toggleFullscreen);
+
+  function onFsChange(){
+    lb.classList.toggle("fs-on", isFs());
+    /* 從全螢幕退出（多半是按 Esc）時，一併收掉播放視窗 */
+    if (!isFs() && weEnteredFs && lb.classList.contains("open")){
+      weEnteredFs = false;
+      closeVideo();
+    }
+  }
+  document.addEventListener("fullscreenchange", onFsChange);
+  document.addEventListener("webkitfullscreenchange", onFsChange);
 
   /* 鍵盤：Esc 關閉、F 全螢幕、1–5 直接播放 */
   document.addEventListener("keydown", function(e){
