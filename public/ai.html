@@ -170,6 +170,19 @@
     border:0; display:block;
   }
 
+  /* 影片載入期間的封面。蓋住 YouTube 自己的載入／品牌畫面，真正開始播
+     才淡出。pointer-events:none 讓點擊能穿透到播放器——萬一自動播放被擋，
+     使用者仍然按得到 YouTube 的播放鍵，不會被這層擋住。 */
+  .lb-poster{
+    position:absolute; inset:0; z-index:1;
+    width:100%; height:100%;
+    object-fit:cover;                 /* 裁掉 YouTube 縮圖的 4:3 上下黑邊 */
+    background:#07110b;
+    opacity:1; transition:opacity .32s ease;
+    pointer-events:none;
+  }
+  .lb-poster.gone{ opacity:0; }
+
   /* 自動播放被瀏覽器擋掉、改以靜音播放時出現的開聲按鈕 */
   .lb-unmute{
     position:absolute; left:50%; bottom:14%; z-index:2;
@@ -326,6 +339,9 @@
   var clearTimer = null;
   var player = null;      /* YouTube IFrame API 播放器 */
   var watchdog = 0;
+  var posterEl = null;    /* 載入期間的封面圖 */
+  var posterTimer = 0;
+  var currentKey = null;
 
   /* ---------------------------------------------------------
      讓影片「點一下就直接播」，不會再出現一次 YouTube 播放鍵：
@@ -361,8 +377,39 @@
   }
   /* 開頁時就先把 API 載好，按下卡片時才不用等 */
   if (location.protocol !== "file:"){
-    if (window.requestIdleCallback) requestIdleCallback(function(){ loadYT(); });
-    else setTimeout(loadYT, 1200);
+    if (window.requestIdleCallback) requestIdleCallback(function(){ loadYT(); preloadPosters(); });
+    else setTimeout(function(){ loadYT(); preloadPosters(); }, 1200);
+  }
+
+  function posterUrl(id, small){
+    return "https://i.ytimg.com/vi/" + id + "/" + (small ? "hqdefault" : "sddefault") + ".jpg";
+  }
+
+  /* 開頁時先把封面圖抓進快取，點下去才能立刻顯示，不會露出 YouTube 載入畫面 */
+  function preloadPosters(){
+    for (var k in VIDEOS){
+      if (VIDEOS[k].youtubeId){ var im = new Image(); im.src = posterUrl(VIDEOS[k].youtubeId); }
+    }
+  }
+
+  function dropPoster(){
+    clearTimeout(posterTimer);
+    if (!posterEl) return;
+    var el = posterEl; posterEl = null;
+    el.classList.add("gone");
+    setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+  }
+
+  /* API 載不進來時的退路：autoplay=1 會讓 YouTube 藏起縮圖與播放鍵，
+     若播放又沒成功就會變成一片黑且無處可點。改載入不帶 autoplay 的版本，
+     使用者至少看得到、也按得到 YouTube 自己的播放鍵。 */
+  function fallbackToManual(){
+    var v = VIDEOS[currentKey];
+    var f = lbFrame.querySelector("iframe");
+    if (!v || !f || !lb.classList.contains("open")) return;
+    f.src = "https://www.youtube-nocookie.com/embed/" + v.youtubeId +
+            "?rel=0&playsinline=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+    dropPoster();
   }
 
   function showUnmuteButton(){
@@ -381,17 +428,19 @@
   function attachPlayer(iframeEl){
     clearTimeout(watchdog);
     loadYT().then(function(YT){
-      if (!YT || !YT.Player || !lb.classList.contains("open")) return;
+      if (!lb.classList.contains("open")) return;
+      if (!YT || !YT.Player){ fallbackToManual(); return; }
       try{
         player = new YT.Player(iframeEl, {
           events: {
             onReady: function(e){ try{ e.target.playVideo(); }catch(err){} },
             onStateChange: function(e){
               if (e.data === 1 || e.data === 3) clearTimeout(watchdog);  /* 播放中 / 緩衝中 */
+              if (e.data === 1) dropPoster();   /* 真的開始播了才收掉封面 */
             }
           }
         });
-      }catch(err){ return; }
+      }catch(err){ fallbackToManual(); return; }
 
       var retries = 0;
       watchdog = setTimeout(function check(){
@@ -444,6 +493,7 @@
   function openVideo(key){
     var v = VIDEOS[key];
     if (!v || !v.youtubeId) return;
+    currentKey = key;
 
     /* 必須在使用者點擊的當下同步呼叫，瀏覽器才會允許進入全螢幕。
        若整頁本來就已是全螢幕（現場展示模式），就不重複要求，
@@ -488,7 +538,18 @@
       f.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
       f.setAttribute("allowfullscreen", "");
       f.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-      lbFrame.replaceChildren(f);
+      var poster = document.createElement("img");
+      poster.className = "lb-poster";
+      poster.alt = "";
+      poster.src = posterUrl(v.youtubeId);
+      poster.addEventListener("error", function(){
+        poster.src = posterUrl(v.youtubeId, true);   /* sddefault 沒有就退 hqdefault */
+      }, { once: true });
+
+      lbFrame.replaceChildren(f, poster);   /* 封面疊在 iframe 之上 */
+      posterEl = poster;
+      clearTimeout(posterTimer);
+      posterTimer = setTimeout(dropPoster, 8000);   /* 保險：封面絕不會卡住不走 */
       attachPlayer(f);
     }
 
@@ -501,6 +562,8 @@
   function closeVideo(){
     if (!lb.classList.contains("open")) return;
     clearTimeout(watchdog);
+    clearTimeout(posterTimer);
+    posterEl = null;
     try{ if (player && player.stopVideo) player.stopVideo(); }catch(err){}   /* 立刻停聲 */
     if (weEnteredFs){ weEnteredFs = false; leaveFs(); }
     lb.classList.remove("open");
