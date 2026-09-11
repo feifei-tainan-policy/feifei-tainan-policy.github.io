@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>你想要瞭解什麼樣的妃妃市長呢？｜台南妃熊幸福</title>
+<link rel="preconnect" href="https://www.youtube-nocookie.com">
+<link rel="preconnect" href="https://www.youtube.com">
+<link rel="preconnect" href="https://i.ytimg.com">
+<meta name="description" content="台南妃熊幸福 AI互動專區 － 點選卡片觀看妃妃市長政策影片">
+<style>
+  /* ===================== 基本版面 ===================== */
+  :root{
+    --ar: 1.776833;              /* 底圖比例 13376 / 7528 */
+    --ring: 0.36vmin;            /* 外框粗細的基準單位 */
+  }
+  *{ box-sizing: border-box; }
+  html, body{ height:100%; }
+  body{
+    margin:0;
+    overflow:hidden;
+    background: radial-gradient(120% 120% at 50% 0%, #16281c 0%, #060c08 72%);
+    display:grid;
+    place-items:center;
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* 舞台 = 底圖，等比縮放後永遠完整顯示在畫面內 */
+  .stage{
+    position:relative;
+    width:  min(100vw,  calc(100vh * var(--ar)));
+    height: min(100vh,  calc(100vw / var(--ar)));
+    width:  min(100vw,  calc(100dvh * var(--ar)));
+    height: min(100dvh, calc(100vw / var(--ar)));
+    opacity:0;
+    transition: opacity .55s ease;
+  }
+  .stage.ready{ opacity:1; }
+
+  .stage img.bg{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    display:block;
+    user-select:none; -webkit-user-drag:none;
+  }
+
+  /* 右側大妃妃的手和手臂伸在「交通」卡片前面。用同一張底圖＋人物遮罩疊在熱區上層，
+     hover 亮框就會從她身後繞過，不會切過手臂。內容與底圖完全相同，平常看不出來。 */
+  .stage img.front{ display:none; }
+  @supports ((mask-image: url("")) or (-webkit-mask-image: url(""))){
+    .stage img.front{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      display:block;
+      pointer-events:none;              /* 點擊穿透到下面的卡片 */
+      user-select:none; -webkit-user-drag:none;
+      -webkit-mask: url("assets/ai-board-2-mask.png") 0 0 / 100% 100% no-repeat;
+      mask: url("assets/ai-board-2-mask.png") 0 0 / 100% 100% no-repeat;
+    }
+  }
+
+  /* ===================== 五個熱區 ===================== */
+  .hot{
+    position:absolute;
+    margin:0; padding:0; border:0;
+    background:transparent;
+    cursor:pointer;
+    border-radius: 10.2% / 6.27%;        /* 對齊卡片圓角（原圖量測半徑約 208px）*/
+    transition: transform .3s cubic-bezier(.2,.75,.2,1),
+                box-shadow .3s ease,
+                -webkit-backdrop-filter .3s ease,
+                backdrop-filter .3s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .hot:focus{ outline:none; }
+
+  /* 滑到／鍵盤選到 → 變亮 + 亮框 + 微微放大 */
+  .hot:hover,
+  .hot:focus-visible{
+    transform: scale(1.035);
+    -webkit-backdrop-filter: brightness(1.15) saturate(1.14);
+    backdrop-filter: brightness(1.15) saturate(1.14);
+    box-shadow:
+      0 0 0 calc(var(--ring) * 1)   rgba(255,255,255,.96),
+      0 0 0 calc(var(--ring) * 2.5) var(--accent),
+      0 0 calc(var(--ring) * 13) calc(var(--ring) * 2.2) var(--glow),
+      0 calc(var(--ring) * 4) calc(var(--ring) * 13) rgba(0,0,0,.42);
+  }
+  .hot:active{ transform: scale(1.012); }
+
+  /* 不支援 backdrop-filter 的瀏覽器：改用一層白色柔光 */
+  @supports not ((backdrop-filter: brightness(1.1)) or (-webkit-backdrop-filter: brightness(1.1))){
+    .hot::before{
+      content:""; position:absolute; inset:0; border-radius:inherit;
+      background:#fff; opacity:0; transition:opacity .3s ease; pointer-events:none;
+    }
+    .hot:hover::before, .hot:focus-visible::before{ opacity:.16; }
+  }
+
+  /* 尚未上線的影片：hover 時右上角出現小標籤 */
+  .hot .soon-tag{
+    position:absolute; top:5%; right:4%;
+    padding:.45em .8em;
+    font-size: 1.35vmin;
+    font-weight:800; letter-spacing:.08em; white-space:nowrap;
+    color:#fff; background:rgba(12,22,16,.82);
+    border:1px solid rgba(255,255,255,.42);
+    border-radius:99em;
+    opacity:0; transform:translateY(-.3em);
+    transition:opacity .25s ease, transform .25s ease;
+    pointer-events:none;
+  }
+  .hot:hover .soon-tag, .hot:focus-visible .soon-tag{ opacity:1; transform:none; }
+
+  /* --- 五張卡片的位置（% 為底圖比例，量測自原圖白色外框，勿隨意更動）--- */
+  #hot-tech      { left: 1.865%;  top:34.239%; width:15.255%; height:44.122%; --accent:#0ef04c; --glow:rgba(14,240,76,.72); }
+  #hot-agri      { left:18.006%;  top:34.252%; width:15.229%; height:44.049%; --accent:#fb8e0b; --glow:rgba(251,142,11,.72); }
+  #hot-tourism   { left:34.095%;  top:34.186%; width:15.416%; height:44.155%; --accent:#fe328c; --glow:rgba(254,50,140,.72); }
+  #hot-welfare   { left:50.325%;  top:34.219%; width:15.218%; height:44.102%; --accent:#9630f8; --glow:rgba(150,48,248,.72); }
+  #hot-transport { left:66.350%;  top:34.219%; width:15.169%; height:44.129%; --accent:#11a2f7; --glow:rgba(17,162,247,.72); }
+
+  /* ===================== 影片播放視窗 ===================== */
+  .lb{
+    position:fixed; inset:0; z-index:60;
+    display:grid; place-items:center;
+    padding: 3vmin;
+    background: rgba(5,11,7,.88);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    opacity:0; visibility:hidden;
+    transition: opacity .3s ease, visibility .3s ease;
+  }
+  .lb.open{ opacity:1; visibility:visible; }
+
+  .lb-panel{
+    width: min(92vw, calc(76vh * 16 / 9));
+    transform: translateY(1.6vmin) scale(.985);
+    transition: transform .34s cubic-bezier(.2,.75,.2,1);
+  }
+  .lb.open .lb-panel{ transform:none; }
+
+  .lb-head{
+    display:flex; align-items:center; gap:1.4vmin;
+    margin:0 0 1.5vmin;
+    color:#fff;
+  }
+  .lb-dot{
+    width:1.1vmin; height:1.1vmin; min-width:7px; min-height:7px;
+    border-radius:50%; background:var(--accent);
+    box-shadow:0 0 0 .55vmin color-mix(in srgb, var(--accent) 26%, transparent);
+    flex:none;
+  }
+  .lb-title{
+    font-size: clamp(15px, 2.2vmin, 26px);
+    font-weight:900; letter-spacing:.06em;
+    margin-right:auto;
+  }
+  .lb-close{
+    flex:none;
+    display:inline-flex; align-items:center; gap:.6em;
+    padding:.75em 1.15em;
+    font: inherit;
+    font-size: clamp(12px, 1.65vmin, 18px);
+    font-weight:800; letter-spacing:.1em;
+    color:#fff; background:transparent;
+    border:1px solid rgba(255,255,255,.36);
+    border-radius:0;
+    cursor:pointer;
+    transition: border-color .2s ease, background .2s ease;
+  }
+  .lb-close:hover{ border-color:#fff; background:rgba(255,255,255,.09); }
+  .lb-close:focus-visible{ outline:3px solid var(--accent); outline-offset:3px; }
+
+  .lb-frame{
+    position:relative;
+    aspect-ratio: 16 / 9;
+    background:#07110b;
+    overflow:hidden;
+    box-shadow: 0 3vmin 8vmin rgba(0,0,0,.6), 0 0 0 2px var(--accent);
+  }
+  .lb-frame iframe{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    border:0; display:block;
+  }
+
+  /* 用 file:// 直接開啟時的替代畫面（YouTube 不允許本機檔案嵌入播放）*/
+  .lb-fallback{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:2.4vmin; padding:5vmin; text-align:center; color:#fff;
+    background:linear-gradient(150deg,#12271a,#0a160f 72%);
+  }
+  .lb-fallback p{
+    margin:0; max-width:44em;
+    font-size:clamp(13px,1.85vmin,20px); font-weight:700;
+    line-height:1.95; letter-spacing:.05em; color:rgba(255,255,255,.9);
+  }
+  .lb-fallback .hint{
+    font-size:clamp(11px,1.45vmin,16px); font-weight:600; color:rgba(255,255,255,.52);
+  }
+  .lb-yt{
+    display:inline-flex; align-items:center; gap:.7em;
+    padding:1em 1.9em;
+    font-size:clamp(13px,1.9vmin,20px); font-weight:900; letter-spacing:.08em;
+    color:#fff; text-decoration:none; background:var(--accent);
+    box-shadow:0 1.6vmin 4vmin rgba(0,0,0,.45);
+    transition:transform .2s ease, filter .2s ease;
+  }
+  .lb-yt:hover{ transform:translateY(-3px); filter:brightness(1.08); }
+  .lb-yt:focus-visible{ outline:3px solid #fff; outline-offset:3px; }
+
+  /* 全螢幕播放：影片填滿整個畫面，標題列改成浮在上方的覆蓋層 */
+  .lb.fs-on{ padding:0; }
+  .lb.fs-on .lb-panel{ width: min(100vw, calc(100vh * 16 / 9)); }
+  .lb.fs-on .lb-head{
+    position:absolute; top:0; left:0; right:0; z-index:3;
+    margin:0; padding:2vmin 2.2vmin;
+    justify-content:flex-end;
+    background:none;
+    pointer-events:none;              /* 空白處讓點擊穿透到影片 */
+  }
+  .lb.fs-on .lb-dot,
+  .lb.fs-on .lb-title{ display:none; } /* YouTube 播放器本身已有標題，不重複 */
+  .lb.fs-on .lb-close{
+    pointer-events:auto;
+    background:rgba(5,11,7,.72);
+    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px);
+  }
+  .lb.fs-on .lb-frame{ box-shadow:none; }
+
+  /* ===================== 提示訊息 ===================== */
+  .toast{
+    position:fixed; left:50%; bottom:5vh; z-index:70;
+    transform: translate(-50%, 1.2vmin);
+    padding:1.1em 1.8em;
+    font-size: clamp(13px, 1.9vmin, 20px);
+    font-weight:800; letter-spacing:.08em;
+    color:#fff; background:rgba(12,22,16,.94);
+    border:1px solid rgba(255,255,255,.28);
+    border-radius:99em;
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition: opacity .26s ease, transform .26s ease, visibility .26s ease;
+  }
+  .toast.show{ opacity:1; visibility:visible; transform: translate(-50%, 0); }
+
+  /* ===================== 全螢幕按鈕（不需要可刪掉這段與 HTML 裡的 button#fs）===================== */
+  .fs{
+    position:fixed; right:1.6vmin; bottom:1.6vmin; z-index:40;
+    width:5.2vmin; height:5.2vmin; min-width:34px; min-height:34px;
+    display:grid; place-items:center;
+    font-size:2.4vmin; line-height:1;
+    color:#fff; background:rgba(10,20,14,.42);
+    border:1px solid rgba(255,255,255,.28);
+    border-radius:50%;
+    cursor:pointer; opacity:.22;
+    transition: opacity .25s ease, background .25s ease;
+  }
+  .fs:hover, .fs:focus-visible{ opacity:1; background:rgba(10,20,14,.78); }
+
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ transition-duration:.01ms !important; animation-duration:.01ms !important; }
+    .hot:hover, .hot:focus-visible{ transform:none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage" id="stage">
+    <img class="bg" id="bg" src="assets/ai-board-2.jpg" alt="你想要瞭解什麼樣的妃妃市長呢？科技三軸、四季農漁業、五大觀光軸、福利六都齊、交通七彩行五支政策影片">
+
+    <button class="hot" id="hot-tech"      data-key="tech"></button>
+    <button class="hot" id="hot-agri"      data-key="agri"></button>
+    <button class="hot" id="hot-tourism"   data-key="tourism"></button>
+    <button class="hot" id="hot-welfare"   data-key="welfare"></button>
+    <button class="hot" id="hot-transport" data-key="transport"></button>
+
+    <img class="front" src="assets/ai-board-2.jpg" alt="" aria-hidden="true" draggable="false">
+  </div>
+
+  <button class="fs" id="fs" type="button" aria-label="切換全螢幕" title="全螢幕（F）">⛶</button>
+
+  <div class="lb" id="lb" aria-hidden="true">
+    <div class="lb-panel" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+      <div class="lb-head">
+        <span class="lb-dot" aria-hidden="true"></span>
+        <span class="lb-title" id="lbTitle"></span>
+        <button class="lb-close" id="lbClose" type="button">✕ 關閉</button>
+      </div>
+      <div class="lb-frame" id="lbFrame"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     ★ 影片設定 ★
+     把 YouTube 影片 ID 貼進 youtubeId 就會自動啟用該張卡片。
+     ID = 網址 https://www.youtube.com/watch?v=XXXXXXXXXXX 中 v= 後面那 11 碼。
+     留空字串 ""，該卡片點下去會顯示「影片即將上線」。
+     ========================================================= */
+  /* 點擊卡片時是否自動進入全螢幕播放。不想要就改成 false。 */
+  var IMMERSIVE = true;
+
+  var VIDEOS = {
+    tech:      { title: "科技三軸 · 台南產業大躍進", youtubeId: "def_D9jXjqk", accent: "#0ef04c" },
+    agri:      { title: "四季農漁業 · 展現台南驕傲", youtubeId: "mwE0XiAuoCg", accent: "#fb8e0b" },
+    tourism:   { title: "五大觀光軸 · 台南好好玩",   youtubeId: "2J2N1mHFz2w", accent: "#fe328c" },
+    welfare:   { title: "福利六都齊 · 台南我驕傲",   youtubeId: "9X55fnZz9ko", accent: "#9630f8" },
+    transport: { title: "交通七彩行 · 台南大起妃",   youtubeId: "",            accent: "#11a2f7" }
+  };
+
+  var stage   = document.getElementById("stage");
+  var bg      = document.getElementById("bg");
+  var lb      = document.getElementById("lb");
+  var lbFrame = document.getElementById("lbFrame");
+  var lbTitle = document.getElementById("lbTitle");
+  var lbClose = document.getElementById("lbClose");
+  var toastEl = document.getElementById("toast");
+  var fsBtn   = document.getElementById("fs");
+  var lastFocus = null;
+  var toastTimer = null;
+  var clearTimer = null;
+  var player = null;      /* YouTube IFrame API 播放器 */
+  var watchdog = 0;
+  var currentKey = null;
+
+  /* ---------------------------------------------------------
+     讓影片「點一下就直接播」，不會再出現一次 YouTube 播放鍵：
+     1. iframe 在使用者點擊的當下才建立，並帶 autoplay=1
+        （由使用者手勢觸發，瀏覽器的自動播放政策才會放行）
+     2. 再用 YouTube IFrame API 呼叫 playVideo() 補一次
+     3. 2.2 秒後若仍未開始播放（有聲自動播放被擋），
+        改成「靜音播放 + 開聲音按鈕」，確保畫面一定是動的
+     --------------------------------------------------------- */
+  var YT_API = "https://www.youtube.com/iframe_api";
+  var ytReady = null;
+  function loadYT(){
+    if (ytReady) return ytReady;
+    ytReady = new Promise(function(resolve){
+      if (window.YT && window.YT.Player){ resolve(window.YT); return; }
+      var done = false;
+      function finish(v){ if (!done){ done = true; resolve(v); } }
+      var timer = setTimeout(function(){ finish(null); }, 6000);
+      var prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function(){
+        if (typeof prev === "function") prev();
+        clearTimeout(timer);
+        finish(window.YT || null);
+      };
+      if (!document.querySelector('script[src="' + YT_API + '"]')){
+        var sc = document.createElement("script");
+        sc.src = YT_API; sc.async = true;
+        sc.onerror = function(){ clearTimeout(timer); finish(null); };
+        document.head.appendChild(sc);
+      }
+    });
+    return ytReady;
+  }
+  /* 開頁時就先把 API 載好，按下卡片時才不用等 */
+  if (location.protocol !== "file:"){
+    if (window.requestIdleCallback) requestIdleCallback(function(){ loadYT(); });
+    else setTimeout(loadYT, 1200);
+  }
+
+  /* API 載不進來時的退路：autoplay=1 會讓 YouTube 藏起縮圖與播放鍵，
+     若播放又沒成功就會變成一片黑且無處可點。改載入不帶 autoplay 的版本，
+     使用者至少看得到、也按得到 YouTube 自己的播放鍵。 */
+  function fallbackToManual(){
+    var v = VIDEOS[currentKey];
+    var f = lbFrame.querySelector("iframe");
+    if (!v || !f || !lb.classList.contains("open")) return;
+    f.src = "https://www.youtube-nocookie.com/embed/" + v.youtubeId +
+            "?rel=0&playsinline=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+  }
+
+  function attachPlayer(iframeEl){
+    clearTimeout(watchdog);
+    loadYT().then(function(YT){
+      if (!lb.classList.contains("open")) return;
+      if (!YT || !YT.Player){ fallbackToManual(); return; }
+      try{
+        player = new YT.Player(iframeEl, {
+          events: {
+            onReady: function(e){ try{ e.target.playVideo(); }catch(err){} },
+            onStateChange: function(e){
+              if (e.data === 1 || e.data === 3) clearTimeout(watchdog);  /* 播放中 / 緩衝中 */
+            }
+          }
+        });
+      }catch(err){ fallbackToManual(); return; }
+
+      var retries = 0;
+      watchdog = setTimeout(function check(){
+        var st = -1, ready = false;
+        try{
+          ready = !!(player && player.getPlayerState);
+          if (ready) st = player.getPlayerState();
+        }catch(err){}
+
+        if (st === 1 || st === 3) return;              /* 已經在播了，什麼都不用做 */
+
+        /* 播放器還沒就緒就無從判斷，再等一下，避免誤判而把有聲播放轉成靜音 */
+        if (!ready && retries < 3){
+          retries++;
+          watchdog = setTimeout(check, 900);
+          return;
+        }
+
+        /* 確定是自動播放被擋。不改成靜音播放——沒有聲音的政見影片沒有意義。
+           改載入不帶 autoplay 的版本，YouTube 會顯示正常播放器介面，
+           使用者按一下就能有聲播放，不會停在無處可點的黑畫面。 */
+        fallbackToManual();
+      }, 2200);
+    });
+  }
+
+  /* 底圖載入後淡入 */
+  function ready(){ stage.classList.add("ready"); }
+  if (bg.complete && bg.naturalWidth) ready();
+  else { bg.addEventListener("load", ready); bg.addEventListener("error", ready); }
+
+  /* 綁定五個熱區 */
+  Array.prototype.forEach.call(document.querySelectorAll(".hot"), function(btn){
+    var v = VIDEOS[btn.dataset.key];
+    if (!v) return;
+    btn.type = "button";
+    if (v.youtubeId){
+      btn.setAttribute("aria-label", v.title + "，點擊播放影片");
+    } else {
+      btn.setAttribute("aria-label", v.title + "，影片即將上線");
+      var tag = document.createElement("span");
+      tag.className = "soon-tag";
+      tag.textContent = "影片即將上線";
+      btn.appendChild(tag);
+    }
+    btn.addEventListener("click", function(){
+      if (v.youtubeId) openVideo(btn.dataset.key);
+      else showToast("「" + v.title + "」影片即將上線");
+    });
+  });
+
+  function openVideo(key){
+    var v = VIDEOS[key];
+    if (!v || !v.youtubeId) return;
+    currentKey = key;
+
+    clearTimeout(clearTimer);
+    lb.style.setProperty("--accent", v.accent);
+    lbTitle.textContent = v.title;
+
+    if (location.protocol === "file:"){
+      /* 直接雙擊 HTML 檔（file://）時，YouTube 會拒絕嵌入播放，
+         因此改為顯示說明並提供前往 YouTube 的連結。
+         要在頁面內直接播放，請用本機伺服器或上傳到網站後開啟。 */
+      var box = document.createElement("div");
+      box.className = "lb-fallback";
+
+      var p1 = document.createElement("p");
+      p1.textContent = "這個頁面目前是用「檔案」方式開啟（file://），YouTube 不允許在這種情況下嵌入播放。";
+
+      var a = document.createElement("a");
+      a.className = "lb-yt";
+      a.href = "https://www.youtube.com/watch?v=" + v.youtubeId;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = "在 YouTube 開啟「" + v.title + "」 ↗";
+
+      var p2 = document.createElement("p");
+      p2.className = "hint";
+      p2.textContent = "要讓影片直接在頁面內播放，請改用網址開啟本頁（上線後為 feifei-tainan-policy.com/ai2.html）；本機預覽可雙擊資料夾裡的「啟動播放頁2.command」。";
+
+      box.append(p1, a, p2);
+      lbFrame.replaceChildren(box);
+    } else {
+      var f = document.createElement("iframe");
+      f.id = "ytPlayer";
+      f.src = "https://www.youtube-nocookie.com/embed/" + v.youtubeId +
+              "?rel=0&playsinline=1&enablejsapi=1&autoplay=1" +
+              "&origin=" + encodeURIComponent(location.origin);
+      f.title = v.title + " 政策影片";
+      f.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      f.setAttribute("allowfullscreen", "");
+      f.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+      lbFrame.replaceChildren(f);
+
+      /* 順序很重要：iframe 必須先建立，全螢幕才能後要求。
+         反過來的話 requestFullscreen() 會先吃掉這次點擊的使用者手勢授權，
+         之後建立的 iframe 就拿不到自動播放權限，變成有聲播放被擋、
+         YouTube 跳出預覽圖與播放鍵。實測順序對調即可同時保住全螢幕與聲音。 */
+      if (IMMERSIVE && !isFs()) weEnteredFs = enterFs();
+      lb.classList.toggle("fs-on", isFs() || weEnteredFs);
+
+      attachPlayer(f);
+    }
+
+    lastFocus = document.activeElement;
+    lb.classList.add("open");
+    lb.setAttribute("aria-hidden", "false");
+    lbClose.focus();
+  }
+
+  function closeVideo(){
+    if (!lb.classList.contains("open")) return;
+    clearTimeout(watchdog);
+    try{ if (player && player.stopVideo) player.stopVideo(); }catch(err){}   /* 立刻停聲 */
+    if (weEnteredFs){ weEnteredFs = false; leaveFs(); }
+    lb.classList.remove("open");
+    lb.setAttribute("aria-hidden", "true");
+    clearTimer = setTimeout(function(){
+      try{ if (player && player.destroy) player.destroy(); }catch(err){}
+      player = null;
+      lbFrame.replaceChildren();
+    }, 320);
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  lbClose.addEventListener("click", closeVideo);
+  lb.addEventListener("click", function(e){ if (e.target === lb) closeVideo(); });
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2400);
+  }
+
+  /* ---------------- 全螢幕 ---------------- */
+  var weEnteredFs = false;   /* 全螢幕是不是「因為播放影片」才進去的 */
+
+  function isFs(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+
+  function enterFs(){
+    var el = document.documentElement;
+    var fn = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!fn) return false;
+    try{
+      var r = fn.call(el);
+      if (r && r.catch) r.catch(function(){});
+      return true;
+    }catch(err){ return false; }
+  }
+
+  function leaveFs(){
+    var fn = document.exitFullscreen || document.webkitExitFullscreen;
+    if (!fn) return;
+    try{
+      var r = fn.call(document);
+      if (r && r.catch) r.catch(function(){});
+    }catch(err){}
+  }
+
+  function toggleFullscreen(){
+    if (isFs()) { weEnteredFs = false; leaveFs(); }
+    else enterFs();
+  }
+  fsBtn.addEventListener("click", toggleFullscreen);
+
+  function onFsChange(){
+    lb.classList.toggle("fs-on", isFs());
+    /* 從全螢幕退出（多半是按 Esc）時，一併收掉播放視窗 */
+    if (!isFs() && weEnteredFs && lb.classList.contains("open")){
+      weEnteredFs = false;
+      closeVideo();
+    }
+  }
+  document.addEventListener("fullscreenchange", onFsChange);
+  document.addEventListener("webkitfullscreenchange", onFsChange);
+
+  /* 鍵盤：Esc 關閉、F 全螢幕、1–5 直接播放 */
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape"){ closeVideo(); return; }
+    if (lb.classList.contains("open")) return;
+    if (e.key === "f" || e.key === "F"){ toggleFullscreen(); return; }
+    var order = ["tech","agri","tourism","welfare","transport"];
+    var n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 5){
+      var v = VIDEOS[order[n - 1]];
+      if (v && v.youtubeId) openVideo(order[n - 1]);
+      else if (v) showToast("「" + v.title + "」影片即將上線");
+    }
+  });
+})();
+</script>
+</body>
+</html>
