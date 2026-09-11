@@ -71,6 +71,8 @@ export const policies: Policy[] = [
     ],
     accent: "#d93f72",
     tint: "#fff0f6",
+    youtubeId: "9X55fnZz9ko",
+    posterPath: "posters/welfare.jpg",
   },
   {
     id: "transport",
