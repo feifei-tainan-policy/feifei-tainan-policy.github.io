@@ -15,6 +15,7 @@ const requiredPublicFiles = [
   "posters/technology.jpg",
   "posters/tourism.jpg",
   "posters/welfare.jpg",
+  "posters/transport.jpg",
   "videos/agriculture.mp4",
   "videos/technology.mp4",
   "videos/tourism.mp4",
