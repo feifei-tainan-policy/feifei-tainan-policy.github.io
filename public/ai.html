@@ -38,6 +38,13 @@
   }
   .stage.ready{ opacity:1; }
 
+  /* 螢幕比例和底圖幾乎一樣時（例如 1920×1080 全螢幕）直接填滿整個畫面。
+     底圖 13376×7528 比 16:9 窄 0.05%，照等比縮放左右會各留一條 1px 黑線；
+     比例差在 1% 以內就改成填滿，拉伸量肉眼看不出來，熱區也會跟著一起縮放。 */
+  @media (min-aspect-ratio: 1759/1000) and (max-aspect-ratio: 1795/1000){
+    .stage{ width:100vw; height:100vh; height:100dvh; }
+  }
+
   .stage img.bg{
     position:absolute; inset:0;
     width:100%; height:100%;
