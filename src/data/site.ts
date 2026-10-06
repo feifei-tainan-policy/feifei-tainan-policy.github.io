@@ -1,6 +1,6 @@
 export const siteConfig = {
-  title: "妃妃市長8大政策｜接棒台南",
-  description: "台南400年第一位女市長｜陳亭妃八大政策影片展示區",
+  title: "妃妃市長6大政策｜接棒台南",
+  description: "台南400年第一位女市長｜陳亭妃六大政策影片展示區",
   repository: "feifei-tainan-policy/feifei-tainan-policy.github.io",
   assets: {
     brandImage: "assets/feifei-brand.jpg",

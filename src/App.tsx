@@ -148,7 +148,7 @@ function App() {
             <span className="mayorTitle">妃妃市長</span>
             <span className="relayTitle">接棒台南</span>
           </h1>
-          <p className="heroCopy">8 大政策，妃妃市長從點線面串聯大台南</p>
+          <p className="heroCopy">6 大政策，妃妃市長從點線面串聯大台南</p>
           <button
             className="primaryAction"
             onClick={() => scrollToSection("policy-stage")}
@@ -159,7 +159,7 @@ function App() {
         <div className="heroIndex" aria-hidden="true">
           <span>01</span>
           <i />
-          <span>08</span>
+          <span>06</span>
         </div>
       </section>
 
@@ -293,7 +293,7 @@ function App() {
           aria-hidden="true"
         />
         <div>
-          <strong>妃妃市長 8 大政策 接棒台南</strong>
+          <strong>妃妃市長 6 大政策 接棒台南</strong>
           <span>台南400年第一位女市長</span>
         </div>
         <p>陳亭妃競選總部</p>
