@@ -45,7 +45,7 @@ assert(existsSync(indexPath), "dist/index.html was not generated");
 
 const html = readFileSync(indexPath, "utf8");
 assert.match(html, /<div id="root"><\/div>/);
-assert.match(html, /妃妃市長8大政策｜接棒台南/);
+assert.match(html, /妃妃市長6大政策｜接棒台南/);
 assert.doesNotMatch(html, /chatgpt-auth|oai-authenticated-user/i);
 
 const unreleased = ["videos/welfare.mp4", "videos/sister-v2.mp4"];
