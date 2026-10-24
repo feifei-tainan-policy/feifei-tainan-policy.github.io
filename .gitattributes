@@ -1,1 +1,2 @@
-*.bat text eol=crlf
+# Windows 批次檔原樣保存 CRLF 換行，從 GitHub 直接下載也能正常執行
+*.bat -text
