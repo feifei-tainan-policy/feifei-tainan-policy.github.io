@@ -329,7 +329,7 @@ mark { background: #fff1a8; color: inherit; padding: 0 1px; border-radius: 3px; 
   max-height: calc(100% - 104px - var(--safe-t) - var(--safe-b));
   display: flex;
   flex-direction: column;
-  background: rgba(255, 253, 249, .97);
+  background: #fffdf9; /* 不透明：背後的 3D 標籤才不會透出來 */
   border: 1px solid #fff;
   border-radius: 22px;
   box-shadow: var(--shadow);
