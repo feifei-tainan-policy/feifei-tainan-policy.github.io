@@ -296,6 +296,21 @@ VITE_BASE_PATH=/
 - 原始素材與建置素材的檔案大小
 - 輸出中沒有 ChatGPT Sites 專屬登入依賴
 
+## 台南政策島（/island）
+
+<https://feifei-tainan-policy.com/island> 是一座 3D 互動政策島：中央「一個大台南」加上 6 大政策島，
+曾文溪把島群分成溪北與溪南。點島或用右側清單可以看細項、依據與政策影片，「串聯線」顯示政策之間的關係。
+
+- 位置：`public/island/`，原生 ES Modules，不經過 Vite 打包，`npm run build` 時原樣複製到 `dist/island/`
+- 3D 引擎：Three.js r160，放在 `public/island/vendor/`（MIT 授權），不依賴 CDN，iOS 15 以上可用
+- **改內容只要改 `public/island/js/data.js`**：島、細項、串聯線、「台南人的一天」時段與自動導覽都在這裡，程式完全由這份資料驅動
+- 細項的狀態標籤（已升格、可行性評估已核定、對標六都補齊…）只在新聞稿有明確寫到時使用，定義在 `TAGS`
+- 文化與美食已自規劃移除，不另設島；府城古蹟與必比登美食依「五大觀光軸」新聞稿放在觀光島
+- 網址參數：`#technology`、`#tech-sci`、`#F1` 可直接開啟指定的島、細項或串聯線；`?kiosk=1` 給競選總部展示機用，閒置 60 秒自動導覽；`?quality=low|medium|high` 可強制畫質
+- 手機版（≤ 800px）用底部抽屜，橫放手機用右側面板；畫質依裝置自動分級，並依實際幀時間自動調整解析度
+
+本機預覽：`npm run build && npm run preview`，再開啟 `/island/`。
+
 ## 版權與安全
 
 - 權利說明：[`COPYRIGHT.md`](COPYRIGHT.md)
