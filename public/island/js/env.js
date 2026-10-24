@@ -339,7 +339,7 @@ export function createEnvironment(THREE, scene, { quality = "high", reduced = fa
   }
 
   function update(dt, time) {
-    waterU.uTime.value = reduced ? 0 : time;
+    waterU.uTime.value = reduced ? 0 : time % 3600; // 32 位元浮點精度：取餘數
     if (!reduced) {
       for (const c of clouds) {
         c.position.x += c.userData.speed * dt;

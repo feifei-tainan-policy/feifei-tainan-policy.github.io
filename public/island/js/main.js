@@ -13,7 +13,9 @@ import { createUI, pinColor } from "./ui.js";
 import { clamp, easeInOutCubic, hexNum } from "./util.js";
 
 const params = new URLSearchParams(location.search);
+// 競選總部觸控展示機：?kiosk=1（24 吋橫放觸控螢幕，HDMI 同步輸出到 LED 牆）
 const KIOSK = params.get("kiosk") === "1";
+const IDLE_MS = (Number(params.get("idle")) || 60) * 1000;
 const reducedMQ = matchMedia("(prefers-reduced-motion: reduce)");
 // 版面模式：橫放手機（高度很小）用右側浮動面板；直式手機用底部抽屜
 const isLandscapePhone = () => innerHeight <= 500 && innerWidth > innerHeight;
@@ -36,6 +38,7 @@ function fatal(msg) {
 function detectQuality() {
   const q = params.get("quality");
   if (q === "low" || q === "medium" || q === "high") return q;
+  if (KIOSK) return "high"; // 展示機是桌上型電腦，觸控螢幕會被誤判成平板
   const coarse = matchMedia("(pointer: coarse)").matches;
   const small = Math.min(screen.width, screen.height) <= 820;
   const mem = navigator.deviceMemory || 4;
@@ -64,6 +67,7 @@ async function start() {
   let reduced = reducedMQ.matches;
   const stage = $("stage");
   const body = document.body;
+  if (KIOSK) body.classList.add("kiosk"); // 要在版面計算前加上，尺寸才會用展示機版
 
   // ---------- Renderer ----------
   setLoad("正在準備畫布…");
@@ -526,7 +530,7 @@ async function start() {
     pauseForModal(on) { modalPause = on; },
   };
 
-  const ui = createUI(app, DATA, { isMobile: isCompact, onePanel });
+  const ui = createUI(app, DATA, { isMobile: isCompact, onePanel, kiosk: KIOSK });
 
   // ---------- 台南人的一天 ----------
   const toMin = (s) => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
@@ -594,7 +598,7 @@ async function start() {
   const ndc = new THREE.Vector2();
   let down = null;
   canvas.addEventListener("pointerdown", (e) => {
-    down = { x: e.clientX, y: e.clientY };
+    down = { x: e.clientX, y: e.clientY, touch: e.pointerType === "touch" };
     fly = null;
     lastInput = performance.now();
     if (tour) stopTour();
@@ -602,8 +606,9 @@ async function start() {
   canvas.addEventListener("pointerup", (e) => {
     if (!down) return;
     const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+    const limit = down.touch ? 12 : 6; // 大螢幕上手指點擊常會滑動幾個像素
     down = null;
-    if (moved <= 6) pick(e.clientX, e.clientY);
+    if (moved <= limit) pick(e.clientX, e.clientY);
   });
   stage.addEventListener("gesturestart", (e) => e.preventDefault());
   controls.addEventListener("change", () => { dirty = true; declutterAt = Math.min(declutterAt, performance.now() + 60); });
@@ -668,8 +673,48 @@ async function start() {
   });
   for (const ev of ["pointerdown", "keydown", "wheel", "touchstart"]) window.addEventListener(ev, () => { lastInput = performance.now(); }, { passive: true });
 
+  // ---------- 展示機 ----------
+  let updateReady = false;
+  function kioskReset() {
+    // 有新版本時趁沒人操作重新整理（Chrome --kiosk 視窗重新整理後仍是全螢幕）
+    if (updateReady && !document.fullscreenElement) { location.reload(); return; }
+    ui.resetForKiosk();
+    const defaults = { flows: false, people: true, freeze: false, bird: false };
+    for (const [name, on] of Object.entries(defaults)) if (state.toggles[name] !== on) app.toggle(name);
+    app.home();
+    startTour();
+  }
+  if (KIOSK) {
+    // 長按不跳選單、不能拖圖、不能把整頁放大縮小
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+    document.addEventListener("dragstart", (e) => e.preventDefault());
+    window.addEventListener("wheel", (e) => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && ["+", "=", "-", "_", "0"].includes(e.key)) e.preventDefault();
+    });
+    // 螢幕保持常亮
+    const keepAwake = () => {
+      if (!("wakeLock" in navigator) || document.visibilityState !== "visible") return;
+      navigator.wakeLock.request("screen").catch(() => {});
+    };
+    keepAwake();
+    document.addEventListener("visibilitychange", keepAwake);
+    // 離線快取：總部網路不穩時也能顯示（?nosw=1 可移除）
+    if ("serviceWorker" in navigator) {
+      if (params.get("nosw") === "1") {
+        navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
+        if (window.caches) caches.keys().then((ks) => ks.filter((k) => k.startsWith("island-")).forEach((k) => caches.delete(k))).catch(() => {});
+      } else {
+        const hadController = !!navigator.serviceWorker.controller;
+        navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController) updateReady = true; });
+        navigator.serviceWorker.register("./sw.js", { scope: "./" })
+          .then((reg) => setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000))
+          .catch(() => {});
+      }
+    }
+  }
+
   // ---------- 尺寸、可見度、WebGL 遺失 ----------
-  let overviewMode = true;
   function resize() {
     const w = stage.clientWidth, h = stage.clientHeight;
     if (!w || !h) return;
@@ -694,7 +739,7 @@ async function start() {
 
   // ---------- 標籤避讓 ----------
   let declutterAt = 0;
-  const hyst = new Map();
+  const hyst = new WeakMap(); // 標籤元素被移除後可以被回收，展示機整天輪播也不會累積
   function declutter() {
     const panels = ui.panelRects();
     const camPos = camera.position;
@@ -754,7 +799,8 @@ async function start() {
       applyTime(false);
     }
     if (tour && now > tour.next) stepTour();
-    if (KIOSK && !tour && now - lastInput > 60000) startTour();
+    // 展示機閒置就重置；影片播放中放寬到 4 分鐘，免得民眾看到一半被切掉
+    if (KIOSK && !tour && now - lastInput > (ui.videoOpen ? 240000 : IDLE_MS)) kioskReset();
 
     const camDist = camera.position.distanceTo(controls.target);
     const showSmall = camDist < 26;
@@ -765,7 +811,7 @@ async function start() {
       env.update(dt, time);
       birds.update(time);
       people.update(dt, time, false, camDist);
-      for (const m of flowMats) m.uniforms.uTime.value = time;
+      for (const m of flowMats) m.uniforms.uTime.value = time % 600; // GPU 是 32 位元浮點，時間取餘數避免長時間運作後失真
     } else if (dirty) {
       people.update(0, time, true, camDist);
     }
@@ -803,8 +849,6 @@ async function start() {
   camera.position.copy(ov.pos);
   controls.target.copy(ov.target);
   controls.update();
-  overviewMode = true;
-  void overviewMode;
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
   requestAnimationFrame(frame);

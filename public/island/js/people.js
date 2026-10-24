@@ -163,7 +163,6 @@ export function createPeople(THREE, scene, { L, graph, flows, reduced, quality }
   const p = new THREE.Vector3(), s = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
   const local = new THREE.Vector3();
   const pos = new THREE.Vector3();
-  const events = [];
   let visible = true;
   let scaleK = 1;
 
@@ -208,7 +207,6 @@ export function createPeople(THREE, scene, { L, graph, flows, reduced, quality }
             w.t = clamp(w.t, 0, 1);
             w.dir *= -1;
             w.pause = 1.4;
-            if (w.flow) events.push({ w, kind: w.t >= 1 ? "arrive" : "depart", time });
           }
         }
       }
@@ -274,7 +272,7 @@ export function createPeople(THREE, scene, { L, graph, flows, reduced, quality }
   }
 
   return {
-    update, setVisible, walkerAt, walkers, flowPaths, events,
+    update, setVisible, walkerAt, walkers, flowPaths,
     feifei, sister,
     meshes: [body, head, hair],
     get visible() { return visible; },

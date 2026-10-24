@@ -127,7 +127,6 @@ body.side-closed .toolbar { right: calc(14px + var(--safe-r)); }
 .toolbar button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .toolbar button#btn-tour svg { fill: currentColor; stroke: none; }
 .toolbar button.icon-only { padding: 0; width: 44px; justify-content: center; }
-.toolbar button:hover { background: var(--yellow); }
 .toolbar button[aria-pressed="true"] { background: var(--green); color: #fff; border-color: var(--green); }
 .mob-only { display: none !important; }
 
@@ -149,7 +148,6 @@ body.side-closed .zoom { right: calc(14px + var(--safe-r)); }
   box-shadow: 0 3px 12px rgba(60, 40, 20, .1);
   font-size: 22px; font-weight: 700; line-height: 1;
 }
-.zoom button:hover { background: var(--yellow); }
 
 /* ---------- HUD ---------- */
 .hud {
@@ -199,7 +197,6 @@ body.has-card.side-closed .hud { transform: translateX(calc(-50% + (var(--card-w
   color: var(--muted);
 }
 .seg button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.seg button:hover { background: var(--yellow); color: var(--ink); }
 .seg button.on, .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
 .daybar {
   display: flex;
@@ -279,7 +276,6 @@ body.side-closed .sidebar { transform: translateX(105%); }
   border-radius: 12px;
 }
 .t-isl > summary::-webkit-details-marker { display: none; }
-.t-isl > summary:hover { background: #fbf5ea; }
 .t-isl.sel > summary { background: var(--t, #f6f1e8); box-shadow: inset 3px 0 0 var(--c); }
 .t-num { font: italic 700 26px/1 Georgia, serif; color: var(--c); }
 .t-name b { display: block; font-size: 15px; }
@@ -300,7 +296,7 @@ body.side-closed .sidebar { transform: translateX(105%); }
   font-size: 13.5px;
   line-height: 1.35;
 }
-.t-items button:hover, .t-items button.sel { background: var(--t, #f6f1e8); }
+.t-items button.sel { background: var(--t, #f6f1e8); }
 .t-items i { flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--c); color: #fff; font: 700 11px/1 var(--font); font-style: normal; }
 .t-flow {
   display: block;
@@ -312,7 +308,6 @@ body.side-closed .sidebar { transform: translateX(105%); }
   background: #fff;
   text-align: left;
 }
-.t-flow:hover { border-color: var(--green); }
 .t-flow .route { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12px; font-weight: 700; }
 .t-flow p { margin: 6px 0 0; font-size: 13px; line-height: 1.45; }
 .t-empty { padding: 24px 10px; color: var(--muted); font-size: 13px; text-align: center; }
@@ -374,7 +369,6 @@ mark { background: #fff1a8; color: inherit; padding: 0 1px; border-radius: 3px; 
   box-shadow: 0 2px 8px rgba(74, 42, 20, .06);
 }
 button.chip { cursor: pointer; }
-button.chip:hover { border-color: var(--c, var(--green)); }
 .chip i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--green)); }
 .tag { display: inline-flex; align-items: center; min-height: 24px; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
 .tag.done { background: #e3f2e6; color: #1e6b37; }
@@ -399,7 +393,6 @@ button.chip:hover { border-color: var(--c, var(--green)); }
   font-weight: 700;
   line-height: 1.35;
 }
-.c-items button:hover { border-color: var(--c); background: var(--t, #fbf8f2); }
 .c-items .n { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--pc, var(--c)); color: #fff; font-size: 12px; }
 .c-items .nm { flex: 1; }
 .c-items .tag { flex: none; }
@@ -414,7 +407,6 @@ button.chip:hover { border-color: var(--c, var(--green)); }
 .c-note { margin: 12px 0 0; padding: 9px 12px; border-radius: 12px; background: #fff7e5; font-size: 12.5px; line-height: 1.6; color: #7a5410; }
 .c-nav { display: flex; gap: 8px; margin-top: 18px; }
 .c-nav button { flex: 1; min-height: 44px; border: 1px solid var(--line); border-radius: 12px; background: #fff; font-size: 13.5px; font-weight: 700; }
-.c-nav button:hover { border-color: var(--c); }
 .c-nav button:disabled { opacity: .35; cursor: default; }
 .video-card {
   position: relative;
@@ -454,7 +446,6 @@ button.chip:hover { border-color: var(--c, var(--green)); }
   transition: opacity .2s, transform .2s, background .2s;
 }
 .isl-label b { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--c); color: #fff; font: 800 12px/1 var(--font); }
-.isl-label:hover { transform: translateY(-2px); }
 .isl-label.sel { background: var(--ink); color: #fff; border-color: var(--ink); }
 .isl-label.dim { opacity: .5; }
 .isl-label.compact span { display: none; }
@@ -749,6 +740,176 @@ body.has-card .mascot, body.touring .mascot { opacity: 0; pointer-events: none; 
   .tour-caption { bottom: calc(8px + var(--safe-b)); width: min(520px, calc(100% - 140px)); padding: 10px 14px 8px; }
   .tour-caption p { font-size: 14px; }
 }
+
+/* ---------- 滑鼠才有 hover：觸控螢幕點過的按鈕不會一直卡在黃色 ---------- */
+@media (hover: hover) {
+  .toolbar button:hover { background: var(--yellow); }
+  .zoom button:hover { background: var(--yellow); }
+  .seg button:hover { background: var(--yellow); color: var(--ink); }
+  .t-isl > summary:hover { background: #fbf5ea; }
+  .t-flow:hover { border-color: var(--green); }
+  button.chip:hover { border-color: var(--c, var(--green)); }
+  .c-items button:hover { border-color: var(--c); background: var(--t, #fbf8f2); }
+  .c-nav button:hover { border-color: var(--c); }
+  .isl-label:hover { transform: translateY(-2px); }
+  .t-items button:hover { background: var(--t, #f6f1e8); }
+  .fs:hover { opacity: 1; background: rgba(31, 36, 33, .78); }
+}
+
+/* ---------- 全螢幕鈕（仿 ai2.html）、提示訊息、導覽提示 ---------- */
+.fs {
+  position: absolute;
+  left: calc(14px + var(--safe-l));
+  bottom: calc(18px + var(--safe-b));
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .45);
+  border-radius: 50%;
+  background: rgba(31, 36, 33, .42);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  opacity: .38;
+  transition: opacity .25s, background .25s;
+}
+.fs[hidden] { display: none; }
+.fs:focus-visible, .fs[aria-pressed="true"] { opacity: .9; background: rgba(31, 36, 33, .7); }
+body.has-fs .mascot { left: calc(14px + 50px + 10px + var(--safe-l)); }
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: calc(110px + var(--safe-b));
+  z-index: 25;
+  max-width: calc(100% - 32px);
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(31, 36, 33, .9);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  transform: translate(-50%, 8px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .25s, transform .25s, visibility .25s;
+}
+.toast.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+.tour-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: var(--pink);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  animation: hint-pulse 1.6s ease-in-out infinite;
+}
+.tour-hint[hidden] { display: none; }
+.tour-hint span { font-size: 18px; }
+@keyframes hint-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
+/* ---------- 競選總部觸控展示機（?kiosk=1，24 吋 1920×1080 橫放） ---------- */
+body.kiosk {
+  --side-w: 384px;
+  --card-w: 430px;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+body.kiosk #app { touch-action: pan-x pan-y; } /* 面板可以捲動，但雙指不會放大整頁 */
+body.kiosk #stage { touch-action: none; }
+body.kiosk .search, body.kiosk .side-foot a, body.kiosk .video-link, body.kiosk .c-src a { display: none !important; }
+body.kiosk .brand { padding: 10px 20px 10px 10px; border-radius: 20px; }
+body.kiosk .brand-logo { width: 64px; height: 64px; border-radius: 14px; }
+body.kiosk .brand-text h1 { font-size: 27px; }
+body.kiosk .brand-text p { font-size: 14.5px; }
+body.kiosk .hero-note { top: calc(112px + var(--safe-t)); max-width: 410px; }
+body.kiosk .hero-num { font-size: 50px; }
+body.kiosk .hero-note h2 { font-size: 20px; }
+body.kiosk .hero-note p { font-size: 14.5px; }
+body.kiosk .toolbar button { min-height: 58px; padding: 0 20px; border-radius: 14px; font-size: 17px; }
+body.kiosk .toolbar button svg { width: 22px; height: 22px; }
+body.kiosk .toolbar button.icon-only { width: 58px; padding: 0; }
+body.kiosk .zoom { gap: 10px; }
+body.kiosk .zoom button { width: 62px; height: 62px; border-radius: 16px; font-size: 30px; }
+body.kiosk .hud { max-width: 700px; }
+body.kiosk .seg button { min-width: 64px; min-height: 64px; padding: 2px 10px; font-size: 13px; }
+body.kiosk .seg button span { display: block; }
+body.kiosk .seg button svg { width: 23px; height: 23px; }
+body.kiosk .daybar { padding: 9px 20px; font-size: 16px; }
+body.kiosk .daybar output { font-size: 22px; }
+body.kiosk .side-head h2 { font-size: 27px; }
+body.kiosk .side-head p { font-size: 14.5px; }
+body.kiosk .side-tabs button { min-height: 56px; font-size: 16.5px; }
+body.kiosk .t-isl > summary { grid-template-columns: 58px 1fr auto; min-height: 72px; }
+body.kiosk .t-num { font-size: 31px; }
+body.kiosk .t-name b { font-size: 17.5px; }
+body.kiosk .t-name small { font-size: 14px; }
+body.kiosk .t-count { font-size: 13.5px; }
+body.kiosk .t-items button { min-height: 54px; font-size: 16px; }
+body.kiosk .t-items i { width: 28px; height: 28px; font-size: 13.5px; }
+body.kiosk .t-flow { padding: 14px; }
+body.kiosk .t-flow .route { font-size: 14px; }
+body.kiosk .t-flow p { font-size: 15.5px; }
+body.kiosk .side-foot { font-size: 13.5px; }
+body.kiosk .card { top: calc(102px + var(--safe-t)); max-height: calc(100% - 122px - var(--safe-t) - var(--safe-b)); border-radius: 26px; }
+body.kiosk #card-content { padding: 26px 24px 32px 26px; }
+body.kiosk .card-close { width: 54px; height: 54px; border-radius: 14px; font-size: 30px; }
+body.kiosk .c-head { padding-right: 52px; }
+body.kiosk .c-badge { width: 62px; height: 62px; font-size: 28px; }
+body.kiosk .c-badge.round { font-size: 24px; }
+body.kiosk .c-title { font-size: 26px; }
+body.kiosk .c-lead { font-size: 19.5px; }
+body.kiosk .c-sub, body.kiosk .c-quote { font-size: 16.5px; }
+body.kiosk .c-quote cite { font-size: 13.5px; }
+body.kiosk .c-body { font-size: 17.5px; line-height: 1.8; }
+body.kiosk .fact { padding: 13px 15px; font-size: 17.5px; }
+body.kiosk .fact b { font-size: 24px; }
+body.kiosk .chip { min-height: 40px; padding: 6px 15px; font-size: 15px; }
+body.kiosk .tag { min-height: 28px; padding: 3px 11px; font-size: 13.5px; }
+body.kiosk .c-sec { margin-top: 24px; font-size: 14px; }
+body.kiosk .c-items button { min-height: 62px; font-size: 16.5px; }
+body.kiosk .c-items .n { width: 32px; height: 32px; font-size: 15px; }
+body.kiosk .c-list h4 { font-size: 14px; }
+body.kiosk .c-list ol, body.kiosk .c-list ul { font-size: 16px; }
+body.kiosk .c-nav button { min-height: 58px; font-size: 16.5px; }
+body.kiosk .c-src, body.kiosk .c-note { font-size: 14px; }
+body.kiosk .video-card .play span { padding: 14px 22px; font-size: 18px; }
+body.kiosk .video-soon { font-size: 15px; }
+body.kiosk .isl-label { padding: 8px 15px 8px 9px; font-size: 17.5px; }
+body.kiosk .isl-label b { min-width: 31px; height: 27px; font-size: 14px; }
+body.kiosk .pin { padding: 4px 13px 4px 4px; font-size: 15.5px; }
+body.kiosk .pin i { width: 27px; height: 27px; font-size: 14px; }
+body.kiosk .region-label { font-size: 18px; }
+body.kiosk .region-label.river { font-size: 16px; }
+body.kiosk .legend { bottom: calc(92px + var(--safe-b)); font-size: 14px; }
+body.kiosk.has-card .legend { bottom: auto; top: calc(102px + var(--safe-t)); }
+body.kiosk .mascot { padding: 6px 18px 6px 6px; font-size: 15.5px; }
+body.kiosk .mascot img { width: 52px; height: 52px; }
+body.kiosk .fs { width: 60px; height: 60px; font-size: 27px; opacity: .45; }
+body.kiosk.has-fs .mascot { left: calc(14px + 60px + 12px + var(--safe-l)); }
+body.kiosk .tour-caption { width: min(840px, calc(100% - 48px)); padding: 20px 26px 16px; border-radius: 22px; }
+body.kiosk .tour-caption p { font-size: 24px; }
+body.kiosk .tour-ctl { margin-top: 10px; font-size: 14.5px; }
+body.kiosk .tour-ctl button { min-height: 46px; padding: 0 20px; font-size: 15.5px; }
+body.kiosk .tour-hint { font-size: 17px; padding: 8px 20px; }
+body.kiosk .tour-hint span { font-size: 21px; }
+body.kiosk .toast { bottom: calc(150px + var(--safe-b)); padding: 13px 24px; font-size: 17px; }
+body.kiosk .intro-box { width: min(640px, 100%); padding: 30px 32px 26px 20px; gap: 22px; }
+body.kiosk .intro-fig { width: 124px; }
+body.kiosk .intro-box h2 { font-size: 28px; }
+body.kiosk .intro-box p { font-size: 17.5px; }
+body.kiosk .intro-actions button { min-height: 58px; padding: 0 24px; font-size: 17px; }
+body.kiosk .video-box { width: min(1320px, 100%); }
+body.kiosk .video-head { font-size: 19px; padding: 12px 14px 12px 22px; }
+body.kiosk .video-head button { width: 56px; height: 56px; font-size: 30px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

@@ -9,7 +9,7 @@ export const circled = (i) => CIRCLED[i] || String(i + 1);
 const srcText = (ids) => (Array.isArray(ids) ? ids : [ids]).map((s) => SOURCES[s] || s).join("、");
 export const pinColor = (isl, i) => (isl.rainbow ? "#" + RAINBOW[i % RAINBOW.length].toString(16).padStart(6, "0") : isl.color);
 
-export function createUI(app, D, { isMobile, onePanel }) {
+export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   const $ = (id) => document.getElementById(id);
   const body = document.body;
   const card = $("card"), cardContent = $("card-content");
@@ -236,17 +236,63 @@ export function createUI(app, D, { isMobile, onePanel }) {
 
   // ---------- 影片 ----------
   const video = $("video"), frame = $("video-frame");
+  const iframeHTML = (id, title) =>
+    `<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&playsinline=1&modestbranding=1" title="${h(title)} 政策影片" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  // 展示機用 YouTube IFrame API（和官網首頁同一招）：先正常載入播放器再呼叫播放，
+  // 自動播放被擋時仍看得到播放鍵，不會停在全黑；影片播完自動關閉、回到政策島
+  let ytReady = null;
+  let player = null;
+  function loadYouTube() {
+    if (ytReady) return ytReady;
+    ytReady = new Promise((resolve) => {
+      if (window.YT && window.YT.Player) return resolve(window.YT);
+      const timer = setTimeout(() => resolve(null), 6000);
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        if (prev) prev();
+        clearTimeout(timer);
+        resolve(window.YT || null);
+      };
+      const sc = document.createElement("script");
+      sc.src = "https://www.youtube.com/iframe_api";
+      sc.async = true;
+      sc.onerror = () => { clearTimeout(timer); resolve(null); };
+      document.head.appendChild(sc);
+    });
+    return ytReady;
+  }
   function openVideo(isl) {
     if (!isl?.video) return;
     $("video-title").textContent = `${isl.title}｜${isl.policy}`;
     const id = encodeURIComponent(isl.video.youtubeId);
-    frame.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&playsinline=1&modestbranding=1" title="${h(isl.title)} 政策影片" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
     $("video-link").href = `https://www.youtube.com/watch?v=${id}`;
     video.hidden = false;
     app.pauseForModal(true);
+    if (!kiosk) {
+      frame.innerHTML = iframeHTML(id, isl.title);
+      return;
+    }
+    frame.innerHTML = '<div id="yt-slot"></div>';
+    loadYouTube().then((YT) => {
+      if (video.hidden) return; // 載入途中已經關掉
+      if (!YT) { frame.innerHTML = iframeHTML(id, isl.title); return; }
+      player = new YT.Player("yt-slot", {
+        videoId: isl.video.youtubeId,
+        host: "https://www.youtube-nocookie.com",
+        playerVars: { rel: 0, playsinline: 1, modestbranding: 1 },
+        events: {
+          onReady: (e) => { try { e.target.playVideo(); } catch { /* 被擋就留給使用者按 */ } },
+          onStateChange: (e) => { if (e.data === 0) closeVideo(); }, // 0＝播放結束
+        },
+      });
+    });
   }
   function closeVideo() {
     if (video.hidden) return;
+    if (player) {
+      try { player.destroy(); } catch { /* 忽略 */ }
+      player = null;
+    }
     frame.innerHTML = "";
     video.hidden = true;
     app.pauseForModal(false);
@@ -367,6 +413,7 @@ export function createUI(app, D, { isMobile, onePanel }) {
   function setTour(on, text, count) {
     $("tour-caption").hidden = !on;
     body.classList.toggle("touring", on);
+    $("tour-hint").hidden = !(on && kiosk);
     $("btn-tour").setAttribute("aria-pressed", on ? "true" : "false");
     if (on) {
       $("tour-text").textContent = text || "";
@@ -386,7 +433,99 @@ export function createUI(app, D, { isMobile, onePanel }) {
       if (!intro.hidden) return closeIntro();
       app.closeCard();
     }
+    const typing = e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA");
+    if ((e.key === "f" || e.key === "F") && !typing && !e.ctrlKey && !e.metaKey) toggleFs();
   });
+
+  // ---------- 提示訊息 ----------
+  const toastEl = $("toast");
+  let toastTimer = 0;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2400);
+  }
+
+  // ---------- 全螢幕（仿 ai2.html 的全螢幕鈕；F 鍵切換） ----------
+  const fsBtn = $("btn-fs");
+  const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  const rootEl = document.documentElement;
+  const fsSupported = !!(rootEl.requestFullscreen || rootEl.webkitRequestFullscreen);
+  let wantFs = false; // 展示機：全螢幕被意外退出後，下一次觸控自動回到全螢幕
+  function enterFs() {
+    const fn = rootEl.requestFullscreen || rootEl.webkitRequestFullscreen;
+    if (!fn) return;
+    try {
+      const r = fn.call(rootEl);
+      if (r && r.catch) r.catch(() => {});
+    } catch { /* 忽略 */ }
+  }
+  function leaveFs() {
+    const fn = document.exitFullscreen || document.webkitExitFullscreen;
+    if (!fn) return;
+    try {
+      const r = fn.call(document);
+      if (r && r.catch) r.catch(() => {});
+    } catch { /* 忽略 */ }
+  }
+  function toggleFs() {
+    if (isFs()) { wantFs = false; leaveFs(); } else { wantFs = true; enterFs(); }
+  }
+  function syncFs() {
+    const on = isFs();
+    fsBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    fsBtn.title = on ? (kiosk ? "長按離開全螢幕" : "離開全螢幕（F）") : "全螢幕（F）";
+    // 視窗本身已經佔滿螢幕（Chrome --kiosk 或 F11）就不需要按鈕
+    const covers = !on && innerWidth >= screen.width - 2 && innerHeight >= screen.height - 2;
+    fsBtn.hidden = !fsSupported || covers || (isMobile() && !kiosk);
+    body.classList.toggle("has-fs", !fsBtn.hidden);
+  }
+  // 展示機在全螢幕時要長按才離開，民眾隨手一點不會跳出去
+  let holdTimer = 0, held = false;
+  fsBtn.addEventListener("pointerdown", () => {
+    held = false;
+    if (kiosk && isFs()) holdTimer = setTimeout(() => { held = true; wantFs = false; leaveFs(); }, 1200);
+  });
+  const cancelHold = () => clearTimeout(holdTimer);
+  fsBtn.addEventListener("pointerup", cancelHold);
+  fsBtn.addEventListener("pointerleave", cancelHold);
+  fsBtn.addEventListener("pointercancel", cancelHold);
+  fsBtn.addEventListener("click", () => {
+    if (held) return;
+    if (kiosk && isFs()) return toast("要離開全螢幕，請長按這顆按鈕");
+    toggleFs();
+  });
+  document.addEventListener("fullscreenchange", syncFs);
+  document.addEventListener("webkitfullscreenchange", syncFs);
+  window.addEventListener("resize", syncFs);
+
+  if (kiosk) {
+    // 全螢幕被意外退出（例如有人按了 Esc）：下一次觸控就回到全螢幕
+    document.addEventListener("click", () => { if (wantFs && !isFs()) enterFs(); }, true);
+    // 所有連結都不離開政策島；回首頁的連結改成回到全景
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest && e.target.closest("a[href]");
+      if (!a) return;
+      e.preventDefault();
+      if (a.getAttribute("href") === "/") app.home();
+    }, true);
+  }
+  syncFs();
+
+  // 展示機閒置時回到初始狀態
+  function resetForKiosk() {
+    closeVideo();
+    intro.hidden = true;
+    search.value = "";
+    setTab("policies");
+    tree.scrollTop = 0;
+    setTime(false);
+    sidebar.classList.remove("full");
+    card.classList.remove("full");
+    if (onePanel()) closeList(true);
+    else if (body.classList.contains("side-closed")) openList();
+  }
 
   if (onePanel()) body.classList.add("side-closed");
   renderTree();
@@ -394,12 +533,14 @@ export function createUI(app, D, { isMobile, onePanel }) {
   return {
     showIsland, showItem, showFlow, showCharacter, showWalker, hideCard,
     openList, closeList, setToggle, setTimeButtons, setDay, setTour, showIntro,
+    toast, resetForKiosk,
+    get videoOpen() { return !video.hidden; },
     get introSeen() { return store.get("feifei-island:intro:v1", false); },
     get modalOpen() { return !video.hidden || !intro.hidden; },
     clearSelection() { selected = { island: null, item: null, flow: null }; renderTree(); },
     panelRects() {
       const rects = [];
-      for (const el of [card, sidebar, $("hud"), $("tour-caption"), document.querySelector(".toolbar"), document.querySelector(".zoom"), document.querySelector(".brand"), $("mascot"), $("legend")]) {
+      for (const el of [card, sidebar, $("hud"), $("tour-caption"), document.querySelector(".toolbar"), document.querySelector(".zoom"), document.querySelector(".brand"), $("mascot"), $("legend"), $("btn-fs")]) {
         if (!el || el.hidden) continue;
         if (el === sidebar && body.classList.contains("side-closed")) continue;
         if (el.id === "hud" && isMobile() && !body.classList.contains("m-time")) continue;
