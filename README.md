@@ -328,6 +328,36 @@ VITE_BASE_PATH=/
 
 改版政策島時，請同步更新 `public/island/sw.js` 的 `VERSION` 與 `index.html` 的 `?v=` 版本號，展示機才會換成新版。
 
+## 台南政策島新版本（/island2）
+
+<https://feifei-tainan-policy.com/island2/> 是加上互動功能的新版本，放在 `public/island2/`。
+`/island` 維持原本的版本不動，兩個版本可以並存、分開修改。總部觸控機要試新版，開
+`https://feifei-tainan-policy.com/island2/?kiosk=1`。
+
+island2 新增：
+
+- **集章卡**：自己點進一座島（或島上的細項）就蓋一個章，工具列「集章」看進度；7 座島集滿可以存成「我的台南集章卡」圖片。
+  網頁版記在這台裝置的瀏覽器；總部觸控機只記在記憶體，閒置重置時歸零，集滿後掃 QR code 在手機上領集章卡
+- **「你是哪一種台南人？」測驗**：6 題生活情境題，算出 6 種類型之一與最有關的 3 項政策，可以「帶我去看」（鏡頭依序飛過去）、
+  存成圖片、分享結果。題目、選項加分與類型文字都在 `js/data.js` 的 `quiz`；結果只會出現島上既有的細項，題目不問住哪一區
+- **分享**：卡片上的「分享」在手機叫出內建分享選單（LINE、臉書…），電腦複製連結。分享網址是 `s/<島>/`，
+  傳到 LINE、臉書會顯示那座島自己的預覽圖（`img/og/<島>.jpg`）
+- **總部觸控機掃碼帶走**：側欄下方常駐 QR code（導覽時是「手機也能玩」，選到哪一項就換成那一項），卡片上的「帶走這一項」會放大 QR code
+- **網友意見（LINE 官方帳號）**：在 `js/data.js` 的 `opinion.lineId` 填上 `@` 開頭的帳號 ID，卡片上才會出現「我有話想說」，
+  點了打開和競辦的 LINE 對話，訊息先帶好「我對「○○」的想法：」；總部觸控機改成掃 QR code。沒填之前不會顯示
+- 網址參數：`#quiz` 直接開測驗、`#quiz=<類型>.<細項>…` 開測驗結果、`#stamps` 開集章卡
+
+改版或複製成新版本（例如 `island3`）時：
+
+```bash
+cp -R public/island2 public/island3                 # 複製成新版本資料夾（程式裡的路徑會跟著資料夾走）
+node scripts/island-version.mjs island3 20261101     # 更新 ?v=、模組 import、離線快取版本號與分享網址
+node scripts/island-share-pages.mjs island3          # 重新產生分享頁（s/）
+```
+
+`island-version.mjs` 也會把 `index.html` 裡 `canonical`、`og:url`、`og:image` 的資料夾名稱換成新的。
+預覽圖 `img/og/*.jpg` 是用 3D 場景實際拍下來的，改了島上的內容想更新預覽圖，再請工程端重拍。
+
 ## 版權與安全
 
 - 權利說明：[`COPYRIGHT.md`](COPYRIGHT.md)
