@@ -2,17 +2,17 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { OrbitControls } from "../vendor/addons/OrbitControls.js";
 import { CSS2DRenderer, CSS2DObject } from "../vendor/addons/CSS2DRenderer.js";
-import { DATA } from "./data.js?v=20261026-2";
-import { layoutIslands, buildIslands, buildGraph, slotLayout, insideHex, TOP, R } from "./world.js?v=20261026-2";
-import { createEnvironment } from "./env.js?v=20261026-2";
-import { createKit, setOwnerColor } from "./kit.js?v=20261026-2";
-import { buildModel, MODEL_TOP, seededRotation } from "./models.js?v=20261026-2";
-import { decorateIslands, buildSeaDecor, createBirds } from "./decor.js?v=20261026-2";
-import { createPeople } from "./people.js?v=20261026-2";
-import { createUI, pinColor } from "./ui.js?v=20261026-2";
-import { createStamps } from "./stamps.js?v=20261026-2";
-import { createPlay } from "./play.js?v=20261026-2";
-import { clamp, easeInOutCubic, hexNum } from "./util.js?v=20261026-2";
+import { DATA } from "./data.js?v=20261026-3";
+import { layoutIslands, buildIslands, buildGraph, slotLayout, insideHex, TOP, R } from "./world.js?v=20261026-3";
+import { createEnvironment } from "./env.js?v=20261026-3";
+import { createKit, setOwnerColor } from "./kit.js?v=20261026-3";
+import { buildModel, MODEL_TOP, seededRotation } from "./models.js?v=20261026-3";
+import { decorateIslands, buildSeaDecor, createBirds } from "./decor.js?v=20261026-3";
+import { createPeople } from "./people.js?v=20261026-3";
+import { createUI, pinColor } from "./ui.js?v=20261026-3";
+import { createStamps } from "./stamps.js?v=20261026-3";
+import { createPlay } from "./play.js?v=20261026-3";
+import { clamp, easeInOutCubic, hexNum } from "./util.js?v=20261026-3";
 
 const params = new URLSearchParams(location.search);
 // 競選總部觸控展示機：?kiosk=1（24 吋橫放觸控螢幕，HDMI 同步輸出到 LED 牆）

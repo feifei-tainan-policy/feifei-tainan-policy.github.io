@@ -1,17 +1,25 @@
 // 存成圖片：集章卡與測驗結果，1080×1350（IG、LINE 都適合的直式比例）
-import { drawQR } from "./qr.js?v=20261026-2";
-import { stampCanvas, FONT } from "./stamps.js?v=20261026-2";
+import { drawQR } from "./qr.js?v=20261026-3";
+import { stampCanvas, FONT } from "./stamps.js?v=20261026-3";
 
 const W = 1080, H = 1350;
 const GREEN = "#176b38", PINK = "#e04a67", INK = "#1f2421", MUTED = "#5d665f", CREAM = "#fff8f1";
 
 const imgCache = new Map();
-export function loadImage(src) {
+// 網路很慢時最多等 5 秒，少一張圖也照樣出圖；沒載到的下次再重抓
+export function loadImage(src, ms = 5000) {
   if (!imgCache.has(src)) {
     imgCache.set(src, new Promise((resolve) => {
       const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null); // 少一張圖也照樣出圖
+      let timer = 0;
+      const done = (v) => {
+        clearTimeout(timer);
+        if (!v) imgCache.delete(src);
+        resolve(v);
+      };
+      timer = setTimeout(() => done(null), ms);
+      img.onload = () => done(img);
+      img.onerror = () => done(null);
       img.src = src;
     }));
   }
