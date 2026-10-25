@@ -1,11 +1,11 @@
 // 互動：集章卡、「你是哪一種台南人？」測驗、分享、掃碼帶走、網友意見
-import { escapeHTML as h } from "./util.js?v=20261026";
-import { TAGS } from "./data.js?v=20261026";
-import { qrSVG } from "./qr.js?v=20261026";
-import { stampURL } from "./stamps.js?v=20261026";
-import { scoreQuiz, encodeResult, decodeResult } from "./quiz.js?v=20261026";
-import { stampPoster, quizPoster } from "./poster.js?v=20261026";
-import { islandURL, shareURL, shareLink, prepareImage, saveImage, opinionURL } from "./share.js?v=20261026";
+import { escapeHTML as h } from "./util.js?v=20261026-2";
+import { TAGS } from "./data.js?v=20261026-2";
+import { qrSVG } from "./qr.js?v=20261026-2";
+import { stampURL } from "./stamps.js?v=20261026-2";
+import { scoreQuiz, encodeResult, decodeResult } from "./quiz.js?v=20261026-2";
+import { stampPoster, quizPoster, loadImage } from "./poster.js?v=20261026-2";
+import { islandURL, shareURL, shareLink, prepareImage, saveImage, opinionURL } from "./share.js?v=20261026-2";
 
 const ICON = {
   save: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/></svg>',
@@ -24,6 +24,8 @@ export function createPlay({ app, ui, D, stamps, kiosk, pinColor }) {
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
   };
   let timers = [];
+  // 存圖要用的圖先下載，結果一出來就能立刻產生圖片
+  const preload = (srcs) => srcs.forEach((src) => loadImage(src));
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
 
   // 一張圖（canvas）放進對話框預覽，並先轉好檔案，按「存成圖片」時才能立刻存
@@ -46,6 +48,7 @@ export function createPlay({ app, ui, D, stamps, kiosk, pinColor }) {
     badge.textContent = stamps.done ? "✓" : String(stamps.count);
     badge.hidden = stamps.count === 0;
     btn.title = `集章卡（已集 ${stamps.count}／${stamps.total}）`;
+    if (stamps.count >= stamps.total - 1) preload(["./img/logo.png", "./img/pose/flag.jpg"]);
     ui.setStamped((id) => stamps.has(id));
   }
   // 卡片打開一座島：自己點的才算（自動導覽不算）
@@ -104,6 +107,7 @@ export function createPlay({ app, ui, D, stamps, kiosk, pinColor }) {
   let quiz = null; // { step, answers }
 
   function openQuiz() {
+    preload(["./img/logo.png", ...Object.values(D.quiz.types).map((t) => t.pose)]);
     quiz = { step: -1, answers: [] };
     renderQuiz();
   }

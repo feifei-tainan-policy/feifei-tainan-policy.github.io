@@ -351,7 +351,7 @@ island2 新增：
 
 ```bash
 cp -R public/island2 public/island3                 # 複製成新版本資料夾（程式裡的路徑會跟著資料夾走）
-node scripts/island-version.mjs island3 20261101     # 更新 ?v=、模組 import、離線快取版本號與分享網址
+node scripts/island-version.mjs island3 20261101     # 更新 ?v=、模組 import、離線快取版本號與分享網址（同一天再改版用 20261101-2）
 node scripts/island-share-pages.mjs island3          # 重新產生分享頁（s/）
 ```
 
