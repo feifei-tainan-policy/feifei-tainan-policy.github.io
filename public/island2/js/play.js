@@ -1,11 +1,11 @@
 // 互動：集章卡、「你是哪一種台南人？」測驗、分享、掃碼帶走、網友意見
-import { escapeHTML as h } from "./util.js?v=20261026-3";
-import { TAGS } from "./data.js?v=20261026-3";
-import { qrSVG } from "./qr.js?v=20261026-3";
-import { stampURL } from "./stamps.js?v=20261026-3";
-import { scoreQuiz, encodeResult, decodeResult } from "./quiz.js?v=20261026-3";
-import { stampPoster, quizPoster, loadImage } from "./poster.js?v=20261026-3";
-import { islandURL, shareURL, shareLink, prepareImage, saveImage, opinionURL } from "./share.js?v=20261026-3";
+import { escapeHTML as h } from "./util.js?v=20261026-4";
+import { TAGS } from "./data.js?v=20261026-4";
+import { qrSVG } from "./qr.js?v=20261026-4";
+import { stampURL } from "./stamps.js?v=20261026-4";
+import { scoreQuiz, encodeResult, decodeResult } from "./quiz.js?v=20261026-4";
+import { stampPoster, quizPoster, loadImage } from "./poster.js?v=20261026-4";
+import { islandURL, shareURL, shareLink, prepareImage, saveImage, opinionURL } from "./share.js?v=20261026-4";
 
 const ICON = {
   save: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/></svg>',

@@ -1,9 +1,9 @@
 // 街道家具、各島樹種、台南沿海點綴（頂頭額沙洲、國聖港燈塔、七股鹽山、蚵棚、竹筏、黑面琵鷺）
-import { TOP, WATER_Y, R } from "./world.js?v=20261026-3";
-import { C } from "./models.js?v=20261026-3";
-import { mulberry32, hashString, mixHex } from "./util.js?v=20261026-3";
-import { coastX } from "./env.js?v=20261026-3";
-import { SISTER_SPOT } from "./people.js?v=20261026-3";
+import { TOP, WATER_Y, R } from "./world.js?v=20261026-4";
+import { C } from "./models.js?v=20261026-4";
+import { mulberry32, hashString, mixHex } from "./util.js?v=20261026-4";
+import { coastX } from "./env.js?v=20261026-4";
+import { SISTER_SPOT } from "./people.js?v=20261026-4";
 
 export function tree(k, x, y, z, type, s, rnd) {
   const r = rnd();

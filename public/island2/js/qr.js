@@ -1,6 +1,6 @@
 // QR code：給總部觸控機「掃碼帶走」用，也畫進集章卡與測驗結果圖
 import { encode } from "../vendor/uqr.js";
-import { escapeHTML as h } from "./util.js?v=20261026-3";
+import { escapeHTML as h } from "./util.js?v=20261026-4";
 
 const cache = new Map();
 function matrix(text) {
