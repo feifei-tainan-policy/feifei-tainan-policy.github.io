@@ -105,6 +105,8 @@ export const policies: Policy[] = [
     ],
     accent: "#6b5bc1",
     tint: "#f0eefb",
+    youtubeId: "YIkcp3WUnBo",
+    posterPath: "posters/sister.jpg",
   },
 ];
 
