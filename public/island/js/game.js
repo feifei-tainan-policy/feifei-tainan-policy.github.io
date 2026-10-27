@@ -1,7 +1,7 @@
 // 小遊戲「四季農漁接接樂」：30 秒內接住掉下來的台南農漁產，躲開颱風。
 // 手指或滑鼠左右拖、鍵盤方向鍵都可以玩；總部觸控機的最高分只記在記憶體。
-import { store, escapeHTML as h } from "./util.js?v=20261027";
-import { track } from "./track.js?v=20261027";
+import { store, escapeHTML as h } from "./util.js?v=20261027-2";
+import { track } from "./track.js?v=20261027-2";
 
 const W = 360, H = 480, TIME = 30;
 const EMOJI = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';

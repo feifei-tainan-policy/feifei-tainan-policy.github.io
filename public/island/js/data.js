@@ -175,6 +175,7 @@ export const DATA = {
       ground: "field",
       tree: "mango",
       lead: "四季農・漁產，用制度撐起青農返鄉的底氣。",
+      game: true, // 卡片上放「四季農漁接接樂」小遊戲入口
       quote: "農漁民不是弱勢，而是台南最重要的根基。",
       source: "pr-1210",
       video: { youtubeId: "mwE0XiAuoCg", poster: "/posters/agriculture.jpg" },
@@ -659,4 +660,124 @@ export const DATA = {
     { target: "sister", caption: "06 姐姐市長：10 座特色公園與教育十現美景。" },
     { target: "all", caption: "交通一通，人才能進來；台南，一起更好。" },
   ],
+
+  // 網友意見：開啟和「陳亭妃」LINE 官方帳號（page.line.me/nhu2565u）的對話，訊息會先帶好「我對○○的想法：」。
+  // 用基本 ID @nhu2565u：和專屬 ID @tingfei 是同一個帳號，基本 ID 不會因為專屬 ID 到期而失效。
+  // 改成空字串 "" 就會收起「我有話想說」
+  opinion: { lineId: "@nhu2565u" },
+
+  // 「你是哪一種台南人？」測驗：每個選項替相關的政策細項加分。
+  // 加總最高的政策島決定類型，結果是這座島最有關的 2 個細項，加上其他島最有關的 1 個。
+  // 結果只會出現上面島上既有的細項，不另外寫承諾；題目只問生活情境，不問住哪一區。
+  quiz: {
+    title: "你是哪一種台南人？",
+    lead: "6 個生活小問題，找出跟你最有關的 3 項政策。",
+    questions: [
+      {
+        q: "你現在的生活，最像哪一種？",
+        options: [
+          { emoji: "💼", label: "上班打拚中", w: { "tech-sci": 2, "tech-shalun": 1, "tech-line": 1, "tr-roads": 1 } },
+          { emoji: "🍼", label: "在家顧小孩", w: { "sis-parks": 2, "wf-child": 3, "sis-inclusive": 1, "sis-every": 1 } },
+          { emoji: "🎓", label: "學生或剛出社會", w: { "wf-youth": 3, "wf-housing": 2, "sis-edu": 1 } },
+          { emoji: "🍵", label: "退休，享受生活", w: { "wf-elder": 3, "tour-xinying": 1, "tr-bike": 1 } },
+        ],
+      },
+      {
+        q: "你的工作和哪一個比較接近？",
+        options: [
+          { emoji: "🔬", label: "科技、工廠、園區", w: { "tech-sci": 2, "tech-shalun": 2, "tech-med": 1, "tech-line": 1 } },
+          { emoji: "🌾", label: "農、漁、畜牧", w: { "ag-insure": 2, "ag-coldchain": 2, "ag-disaster": 1, "ag-platform": 1, "ag-export": 1, "tech-flower": 1 } },
+          { emoji: "🍜", label: "觀光、餐飲、開店", w: { "tour-food": 2, "tour-stay": 2, "tour-fucheng": 1, "ag-market": 1 } },
+          { emoji: "🏫", label: "其他工作，或還沒工作", w: { "wf-six": 2, "sis-edu": 1 } },
+        ],
+      },
+      {
+        q: "平常你怎麼移動？",
+        options: [
+          { emoji: "🛵", label: "騎機車或開車", w: { "tr-roads": 2, "tr-rail": 1 } },
+          { emoji: "🚆", label: "搭公車、火車或高鐵", w: { "tr-blue": 2, "tr-ring": 1, "tr-rail": 1 } },
+          { emoji: "🚲", label: "騎單車或走路", w: { "tr-bike": 2, "tr-lrt": 1 } },
+        ],
+      },
+      {
+        q: "放假最想去哪裡？",
+        options: [
+          { emoji: "🌅", label: "海邊看夕陽", w: { "tour-coast": 3 } },
+          { emoji: "⛰️", label: "山上走走", w: { "tour-mountain": 2, "tour-xinying": 1 } },
+          { emoji: "🏮", label: "老城區吃小吃", w: { "tour-food": 2, "tour-fucheng": 2 } },
+          { emoji: "🛝", label: "帶孩子去公園", w: { "sis-parks": 2, "sis-orchid": 2, "sis-inclusive": 1 } },
+        ],
+      },
+      {
+        q: "你最希望台南哪裡變得更好？",
+        options: [
+          { emoji: "🚇", label: "交通更方便", w: { "tr-blue": 2, "tr-ring": 2, "tr-roads": 1, "tr-sugar": 1 } },
+          { emoji: "💡", label: "工作機會更多", w: { "tech-line": 2, "tech-sci": 1, "ag-youth": 1, "wf-youth": 1 } },
+          { emoji: "🤝", label: "照顧更周到", w: { "wf-six": 2, "wf-elder": 1, "wf-child": 1, "wf-women": 1 } },
+          { emoji: "📚", label: "孩子的教育和遊戲空間", w: { "sis-edu": 2, "sis-every": 2, "sis-parks": 1 } },
+        ],
+      },
+      {
+        q: "你和台南的關係是？",
+        options: [
+          { emoji: "🌱", label: "土生土長的台南人", w: { "ag-market": 2, "tour-fucheng": 1, "tr-sugar": 1 } },
+          { emoji: "🧳", label: "在外地打拚，想回台南", w: { "ag-youth": 2, "wf-youth": 2, "tech-sci": 1 } },
+          { emoji: "🏠", label: "搬來台南的新台南人", w: { "wf-housing": 2, "tr-blue": 1, "tour-axes": 1 } },
+          { emoji: "📷", label: "來台南玩的旅人", w: { "tour-stay": 2, "tour-axes": 2, "tr-lrt": 1 } },
+        ],
+      },
+    ],
+    // 依加總最高的政策島決定類型；pose 是存圖時用的妃妃姿勢
+    types: {
+      technology: { name: "園區打拚族", desc: "每天在園區和城市之間來回，最在意產業升級和好工作。", pose: "./img/pose/tablet.jpg" },
+      agriculture: { name: "四季農漁人", desc: "跟著四季和天氣過日子，最在意收成、通路和保障。", pose: "./img/pose/lever.jpg" },
+      tourism: { name: "巷弄生活家", desc: "愛走巷子、吃小吃、到處走走，最懂台南的好味道。", pose: "./img/pose/point.jpg" },
+      welfare: { name: "暖心照顧者", desc: "照顧家人也照顧自己，最在意台南的福利跟上六都。", pose: "./img/pose/elder.jpg" },
+      transport: { name: "通勤移動派", desc: "每天都在路上，最在意交通順不順、溪北溪南近不近。", pose: "./img/pose/jump.jpg" },
+      sister: { name: "親子同樂派", desc: "最在意孩子有地方放電、學得快樂，也被好好看見。", pose: "./img/pose/kids.jpg" },
+    },
+  },
+
+  // 流量統計（Google Analytics 4）：填上 G- 開頭的評估 ID 才會開始記錄；空字串＝不記錄
+  analytics: { gaId: "" },
+
+  // 來站計數器（您是第 N 位訪客）：用免費的 Abacus 計數服務，每個網域各算各的；api 改成空字串 "" 就會收起
+  visits: { api: "https://abacus.jasoncameron.dev", key: "island", since: "2026.10.27" },
+
+  // 問妃妃：點問題、妃妃回答。lead 只寫連接的話，內容一律由下面列的細項（新聞稿）組成。
+  // acts：quiz 測驗、stamps 集章卡、eggs 找寶物、game 小遊戲、avatar 我的角色、opinion LINE（有設定才顯示）
+  ask: {
+    greet: "嗨！想知道哪一方面的政策？點下面的問題，我用新聞稿裡的內容回答你。",
+    questions: [
+      { id: "xibei", q: "我住溪北，有什麼？", lead: "溪北的政策有這幾項：", items: ["tech-flower", "tr-sugar", "sis-orchid"] },
+      { id: "kids", q: "家裡有小孩，有什麼？", lead: "跟孩子有關的有這些：", items: ["sis-parks", "sis-inclusive", "wf-child", "sis-edu"] },
+      { id: "youth", q: "年輕人想回台南呢？", lead: "給青年的有這幾項：", items: ["wf-youth", "ag-youth", "wf-housing"] },
+      { id: "elder", q: "長輩有什麼照顧？", lead: "長輩照顧的方向是對標六都、逐項補齊：", items: ["wf-elder", "wf-six"] },
+      { id: "traffic", q: "交通會怎麼改善？", lead: "交通七彩行有這些：", items: ["tr-roads", "tr-blue", "tr-ring", "tr-rail"] },
+      { id: "farm", q: "農漁民有什麼保障？", lead: "四季農漁業有這幾項：", items: ["ag-insure", "ag-disaster", "ag-coldchain", "ag-export"] },
+      { id: "tourism", q: "觀光要怎麼發展？", lead: "五大觀光軸的重點：", items: ["tour-axes", "tour-stay", "tour-food"] },
+      { id: "tech", q: "科技產業呢？", lead: "科技三軸把三個園區串起來：", items: ["tech-sci", "tech-shalun", "tech-line"] },
+      { id: "six", q: "6 大政策是什麼？", lead: "一個大台南，6 種前進的力量：", islands: ["technology", "agriculture", "tourism", "welfare", "transport", "sister"] },
+      { id: "who", q: "妃妃是誰？", lead: "妃妃的經歷：", items: ["tn-37", "tn-baton"] },
+      { id: "fun", q: "政策島有什麼好玩的？", lead: "可以這樣玩：", acts: ["quiz", "stamps", "eggs", "game", "avatar"] },
+      { id: "talk", q: "我想跟妃妃說話", lead: "歡迎用 LINE 告訴妃妃你的想法！", acts: ["opinion"] },
+    ],
+  },
+
+  // 小彩蛋：藏在島上的台南物產（鏡頭拉近才看得到）。at＝[角度, 距島中心幾倍半徑]，water＝在海面上
+  // note 取自新聞稿或細項內容；item＝「看相關政策」要開的細項
+  eggs: [
+    { id: "mango", kind: "mango", emoji: "🥭", name: "玉井愛文芒果", island: "agriculture", at: [200, 0.74], note: "玉井愛文芒果成功打入日本市場", item: "ag-export", hint: "在四季農漁業島上" },
+    { id: "melon", kind: "melon", emoji: "🍈", name: "七股洋香瓜", island: "tourism", at: [160, 0.74], note: "七股洋香瓜也成功打入日本市場", item: "ag-export", hint: "在五大觀光軸島上" },
+    { id: "rice", kind: "rice", emoji: "🌾", name: "台灣優質稻米", island: "technology", at: [20, 0.74], note: "有系統地推動台灣優質稻米外銷日本", item: "ag-export", hint: "在科技三軸島上" },
+    { id: "orchid", kind: "orchid", emoji: "🌸", name: "蘭花", island: "sister", at: [-30, 0.74], note: "打造溪北蘭花獸公園", item: "sis-orchid", hint: "在親子友善城市島上" },
+    { id: "fish", kind: "fish", emoji: "🐟", name: "虱目魚", island: "transport", at: [25, 1.12], water: true, note: "農漁業資訊平台，作為投入漁苗與栽種的依據", item: "ag-platform", hint: "跳出海面，在交通七彩行島的前面" },
+    { id: "spoonbill", kind: "spoonbill", emoji: "🐦", name: "黑面琵鷺", island: "welfare", at: [150, 1.1], water: true, note: "七股、四草一帶的台江國家公園，是台南的自然資產", item: "tour-coast", hint: "站在福利六都齊島旁邊的淺灘" },
+  ],
+
+  // 點到妃妃、姐姐時的台詞：只用競選口號與新聞稿裡有的話
+  lines: {
+    feifei: ["叮鈴叮鈴～一起騎出來！", "綠色・陽光・行動力！", "台南的未來，一起騎出來！"],
+    sister: ["讓孩子快樂學，也能勇敢追夢！", "教育不是口號，而是信仰。", "抱抱小熊！"],
+  },
 };

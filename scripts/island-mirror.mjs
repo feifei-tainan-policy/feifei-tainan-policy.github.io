@@ -1,19 +1,19 @@
-// 把政策島的一個版本複製到另一個網域（同步複本），例如 island3 → https://yes100.ai/island/。
+// 把政策島的一個版本複製到另一個網域（同步複本），例如 island → https://yes100.ai/island/。
 //
 // 用法：node scripts/island-mirror.mjs <來源資料夾> <輸出的網站根目錄> <新網址>
-//   例：node scripts/island-mirror.mjs island3 ../yes100.ai https://yes100.ai/island/
+//   例：node scripts/island-mirror.mjs island ../yes100.ai https://yes100.ai/island/
 //   - 整個資料夾複製到 <輸出>/<新網址的資料夾>/（舊的先清掉）
 //   - og:url、og:image 這些完整網址換成新網址；canonical 保留原站，搜尋引擎以原站為主
 //   - 回首頁的連結（「回到 6 大政策影片」）改成原站首頁
 //   - 用到的網站根目錄檔案（/favicon.ico、/posters/…）一起複製，找不到就報錯
-// GitHub Actions 的 Sync island3 to yes100.ai 會在官網部署成功後自動執行。
+// GitHub Actions 的 Sync island to yes100.ai 會在官網部署成功後自動執行。
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const [folder, outRoot, target] = process.argv.slice(2);
 if (!folder || !outRoot || !/^https:\/\/[^/]+\/[\w-]+\/$/.test(target || "")) {
-  console.error("用法：node scripts/island-mirror.mjs <來源資料夾，例如 island3> <輸出的網站根目錄> <新網址，例如 https://yes100.ai/island/>");
+  console.error("用法：node scripts/island-mirror.mjs <來源資料夾，例如 island> <輸出的網站根目錄> <新網址，例如 https://yes100.ai/island/>");
   process.exit(1);
 }
 const SITE = "https://feifei-tainan-policy.com";

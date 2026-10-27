@@ -1,8 +1,8 @@
 // 小彩蛋：島上藏著 6 樣台南物產，鏡頭拉近才看得到，點到就收集；
 // 點騎單車的妃妃會按鈴、點姐姐的小熊會跳。台詞只用新聞稿與競選口號裡有的話。
-import { TOP, R } from "./world.js?v=20261027";
-import { store, escapeHTML as h } from "./util.js?v=20261027";
-import { track } from "./track.js?v=20261027";
+import { TOP, R } from "./world.js?v=20261027-2";
+import { store, escapeHTML as h } from "./util.js?v=20261027-2";
+import { track } from "./track.js?v=20261027-2";
 
 const KEY = "feifei-island:eggs:v1";
 

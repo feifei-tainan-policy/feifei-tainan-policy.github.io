@@ -300,6 +300,14 @@ VITE_BASE_PATH=/
 <https://feifei-tainan-policy.com/island> 是一座 3D 互動政策島：中央「一個大台南」加上 6 大政策島，
 曾文溪把島群分成溪北與溪南。點島或用右側清單可以看細項、依據與政策影片，「串聯線」顯示政策之間的關係。
 
+目前的版本（2026-10-27 起把原本的 `/island` 與 `/island3` 對調）：
+
+| 網址 | 內容 |
+|---|---|
+| `/island` | 最新版：下面「island2 新增」與「原本 island3 的新功能」全部都有 |
+| `/island2` | 2026-10-26 的版本：集章卡、測驗、分享、LINE 意見 |
+| `/island3` | 2026-10-25 的最初版本（原本的 `/island`）；原本 island3 的分享連結（`/island3/s/…`）會轉到 `/island` |
+
 - 位置：`public/island/`，原生 ES Modules，不經過 Vite 打包，`npm run build` 時原樣複製到 `dist/island/`
 - 3D 引擎：Three.js r160，放在 `public/island/vendor/`（MIT 授權），不依賴 CDN，iOS 15 以上可用
 - **改內容只要改 `public/island/js/data.js`**：島、細項、串聯線、「台南人的一天」時段與自動導覽都在這裡，程式完全由這份資料驅動
@@ -325,13 +333,12 @@ VITE_BASE_PATH=/
 - 有新版本時會在閒置時自動重新整理；要停用離線快取請開 `?kiosk=1&nosw=1`
 - 全螢幕鈕：沒有用 `--kiosk` 開時，點一下進入全螢幕；全螢幕中要長按 1.2 秒才會離開，被意外退出時下一次觸控自動回到全螢幕
 
-改版政策島時，請同步更新 `public/island/sw.js` 的 `VERSION` 與 `index.html` 的 `?v=` 版本號，展示機才會換成新版。
+改版政策島時執行 `node scripts/island-version.mjs island <日期版本>`（更新 `?v=` 與 `sw.js` 的版本號），展示機才會換成新版。
 
-## 台南政策島新版本（/island2）
+## 政策島的互動功能（island2 起）
 
-<https://feifei-tainan-policy.com/island2/> 是加上互動功能的新版本，放在 `public/island2/`。
-`/island` 維持原本的版本不動，兩個版本可以並存、分開修改。總部觸控機要試新版，開
-`https://feifei-tainan-policy.com/island2/?kiosk=1`。
+<https://feifei-tainan-policy.com/island2/>（`public/island2/`）加上了下面這些互動功能，現在的 `/island` 也都有。
+各版本資料夾可以並存、分開修改；總部觸控機開 `https://feifei-tainan-policy.com/island/?kiosk=1`。
 
 island2 新增：
 
@@ -346,19 +353,20 @@ island2 新增：
   點了打開和競辦的 LINE 對話，訊息先帶好「我對「○○」的想法：」；總部觸控機改成掃 QR code。沒填之前不會顯示
 - 網址參數：`#quiz` 直接開測驗、`#quiz=<類型>.<細項>…` 開測驗結果、`#stamps` 開集章卡
 
-改版或複製成新版本（例如 `island3`）時：
+改版或複製成新版本（例如 `island4`）時：
 
 ```bash
-cp -R public/island2 public/island3                 # 複製成新版本資料夾（程式裡的路徑會跟著資料夾走）
-node scripts/island-version.mjs island3 20261101     # 更新 ?v=、模組 import、離線快取版本號與分享網址（同一天再改版用 20261101-2）
-node scripts/island-share-pages.mjs island3          # 重新產生分享頁（s/）
+cp -R public/island public/island4                  # 複製成新版本資料夾（程式裡的路徑會跟著資料夾走）
+node scripts/island-version.mjs island4 20261101     # 更新 ?v=、模組 import、離線快取版本號與分享網址（同一天再改版用 20261101-2）
+node scripts/island-share-pages.mjs island4          # 重新產生分享頁（s/）
 ```
 
 `island-version.mjs` 也會把 `index.html` 裡 `canonical`、`og:url`、`og:image` 的資料夾名稱換成新的。
 
-### island3（/island3）
+### 原本 island3 的新功能（現在在 /island）
 
-<https://feifei-tainan-policy.com/island3/> 是 island2 再加上下面這些功能（總部觸控機：`/island3/?kiosk=1`）：
+下面這些功能原本在 `/island3`，2026-10-27 起換到 <https://feifei-tainan-policy.com/island/>（總部觸控機：`/island/?kiosk=1`）。
+導覽說明的「看過了」記號改成 v2，看過舊版說明的人會再看到一次新版說明。
 
 - **台南人的一天可以點**：點畫面下方的時段條，列出一天 8 個時段；點一個時段，時間會停在那一段、鏡頭帶到相關政策並標出名稱。
   「播放一整天」會自動走過 8 個時段。時段與政策的對應在 `js/data.js` 的 `dayCycle`
@@ -379,15 +387,15 @@ node scripts/island-share-pages.mjs island3          # 重新產生分享頁（s
 
 ### 同步到 yes100.ai/island
 
-<https://yes100.ai/island/> 是 island3 的同步複本，放在 repo
+<https://yes100.ai/island/> 是 `/island`（最新版）的同步複本，放在 repo
 [feifei-tainan-policy/yes100.ai](https://github.com/feifei-tainan-policy/yes100.ai)（GitHub Pages，網域在 Namecheap）。
 
-- 官網每次部署成功，GitHub Actions 的 **Sync island3 to yes100.ai**（`.github/workflows/sync-yes100.yml`）就會執行
-  `scripts/island-mirror.mjs`，把 `public/island3` 複製過去再推上 yes100.ai repo；要手動同步就在 Actions 按 Run workflow
+- 官網每次部署成功，GitHub Actions 的 **Sync island to yes100.ai**（`.github/workflows/sync-yes100.yml`）就會執行
+  `scripts/island-mirror.mjs`，把 `public/island` 複製過去再推上 yes100.ai repo；要手動同步就在 Actions 按 Run workflow
 - 複本裡分享用的網址（`og:url`、`og:image`、分享頁）換成 yes100.ai，`canonical` 保留原站；「回到 6 大政策影片」連回官網首頁；
   用到的 `/favicon*`、`/posters/` 一起複製
 - 推送用的是 yes100.ai repo 的 deploy key（只能寫那個 repo），私鑰存在這個 repo 的 secret `YES100_DEPLOY_KEY`
-- 之後要改成同步別的版本（例如 island4），把 workflow 裡的 `island3` 換掉即可
+- 之後要改成同步別的版本（例如 island4），把 workflow 裡的 `island` 換掉即可
 
 ## 版權與安全
 

@@ -1,6 +1,6 @@
 // 小人、串聯線上的搬運者、騎單車的妃妃市長、抱小熊的姐姐妃妃
-import { TOP } from "./world.js?v=20261027";
-import { mulberry32, clamp } from "./util.js?v=20261027";
+import { TOP } from "./world.js";
+import { mulberry32, clamp } from "./util.js";
 
 export const SISTER_SPOT = [-0.12, 1.42];
 const SKIN = [0xf3cfae, 0xe6b48f, 0xcf9670, 0xf0c4a0];
@@ -148,9 +148,6 @@ export function createPeople(THREE, scene, { L, graph, flows, reduced, quality }
   }
   const loopLen = lengths(loop);
   let ffDist = 0;
-  // 彩蛋：被點到時跳一下（秒數倒數）
-  let ffHop = 0, sisHop = 0;
-  const HOP = 0.7;
 
   // ---------- 抱小熊的姐姐妃妃（站在姐姐島） ----------
   const sister = buildSister(THREE);
@@ -247,9 +244,7 @@ export function createPeople(THREE, scene, { L, graph, flows, reduced, quality }
     if (loop.length > 1) {
       if (!frozen && !reduced) ffDist = (ffDist + dt * 0.62) % loopLen[loopLen.length - 1];
       const st = sampleRoute(loop, loopLen, ffDist);
-      ffHop = Math.max(0, ffHop - dt);
-      const jump = ffHop > 0 ? Math.sin((1 - ffHop / HOP) * Math.PI) * 0.09 * k : 0;
-      feifei.group.position.set(st.x, st.y + jump, st.z);
+      feifei.group.position.set(st.x, st.y, st.z);
       feifei.group.rotation.y = st.yaw;
       feifei.group.scale.setScalar(k * 1.25);
       feifei.pedal(!frozen && !reduced ? time : 0);
@@ -257,8 +252,6 @@ export function createPeople(THREE, scene, { L, graph, flows, reduced, quality }
     if (sis) {
       sister.group.scale.setScalar(k * 1.3);
       sister.wave(!frozen && !reduced ? time : 0);
-      sisHop = Math.max(0, sisHop - dt);
-      sister.bearHop(sisHop > 0 ? 1 - sisHop / HOP : 0);
     }
   }
 
@@ -281,8 +274,6 @@ export function createPeople(THREE, scene, { L, graph, flows, reduced, quality }
   return {
     update, setVisible, walkerAt, walkers, flowPaths,
     feifei, sister,
-    hopFeifei() { ffHop = HOP; },
-    hopSister() { sisHop = HOP; },
     meshes: [body, head, hair],
     get visible() { return visible; },
     positionOfFeifei,
@@ -407,11 +398,6 @@ function buildSister(THREE) {
     wave(t) {
       wave.rotation.z = 0.5 + Math.sin(t * 4) * 0.35;
       bear.rotation.y = Math.sin(t * 1.5) * 0.15;
-    },
-    // p：0～1 跳一下並轉一圈，0＝抱在手上
-    bearHop(p) {
-      bear.position.y = 0.15 + (p > 0 ? Math.sin(p * Math.PI) * 0.12 : 0);
-      if (p > 0) bear.rotation.y = p * Math.PI * 2;
     },
   };
 }

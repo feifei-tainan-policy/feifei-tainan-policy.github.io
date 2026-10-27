@@ -1,10 +1,17 @@
 // DOM 介面：清單、卡片、HUD、導覽說明、影片、手機底部抽屜
-import { TAGS, SOURCES } from "./data.js";
-import { escapeHTML as h, store } from "./util.js";
-import { RAINBOW } from "./models.js";
-import { ROLE_LABEL, CARRY_LABEL } from "./people.js";
+import { TAGS, SOURCES } from "./data.js?v=20261027-2";
+import { escapeHTML as h, store } from "./util.js?v=20261027-2";
+import { RAINBOW } from "./models.js?v=20261027-2";
+import { ROLE_LABEL, CARRY_LABEL } from "./people.js?v=20261027-2";
+import { qrSVG } from "./qr.js?v=20261027-2";
+import { stampURL } from "./stamps.js?v=20261027-2";
+import { islandURL, opinionURL } from "./share.js?v=20261027-2";
+import { track } from "./track.js?v=20261027-2";
 
 const CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩";
+// 每個版本資料夾各記各的「看過導覽說明」，新版本的說明才會再出現一次
+// （v2：/island 換成新版，看過舊版說明的人會再看到一次）
+const INTRO_KEY = `feifei-${location.pathname.split("/")[1] || "island"}:intro:v2`;
 export const circled = (i) => CIRCLED[i] || String(i + 1);
 const srcText = (ids) => (Array.isArray(ids) ? ids : [ids]).map((s) => SOURCES[s] || s).join("、");
 export const pinColor = (isl, i) => (isl.rainbow ? "#" + RAINBOW[i % RAINBOW.length].toString(16).padStart(6, "0") : isl.color);
@@ -22,6 +29,8 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   const nameOf = (id) => byId.get(id)?.short || id;
   let tab = "policies";
   let selected = { island: null, item: null, flow: null };
+  let current = null; // 卡片上「分享／帶走／我有話想說」要用的：{ id, title, page }
+  let stamped = () => false;
 
   const totalItems = islands.reduce((s, i) => s + i.items.length, 0);
   $("side-sub").innerHTML = `6 大政策 ／ ${totalItems} 個細項 ／ ${D.flows.length} 條串聯<br>選一座島，走進它的城市風景。`;
@@ -58,7 +67,7 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
       if (q && !items.length && !islHit) continue;
       const open = q ? true : selected.island === isl.id;
       html.push(`<details class="t-isl${selected.island === isl.id ? " sel" : ""}" data-island="${isl.id}" style="--c:${isl.color};--t:${isl.tint}" ${open ? "open" : ""}>
-        <summary data-pick="${isl.id}"><span class="t-num">${isl.num || isl.badge}</span><span class="t-name"><b>${hl(isl.policy, q)}</b><small>${hl(isl.title, q)}</small></span><span class="t-count">${isl.items.length} 項 ↗</span></summary>
+        <summary data-pick="${isl.id}"><span class="t-num">${isl.num || isl.badge}</span><span class="t-name"><b>${hl(isl.policy, q)}</b><small>${hl(isl.title, q)}</small></span><span class="t-count">${stamped(isl.id) ? `<img class="t-stamp" src="${stampURL(isl)}" alt="已集章" width="30" height="30">` : ""}${isl.items.length} 項 ↗</span></summary>
         <ul class="t-items">${(q ? items : isl.items.map((it, i) => ({ it, i }))).map(({ it, i }) => `<li><button type="button" data-item="${it.id}" class="${selected.item === it.id ? "sel" : ""}" style="--c:${pinColor(isl, i)}"><i>${i + 1}</i><span>${hl(it.name, q)}</span></button></li>`).join("")}</ul>
       </details>`);
     }
@@ -88,20 +97,42 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   }
 
   // ---------- 卡片 ----------
-  function open(html, style) {
+  // panel：不是政策內容的自訂面板（我的角色、台南人的一天），有自己的點擊處理與離開時的收尾
+  let panel = null;
+  function leavePanel() {
+    if (!panel) return;
+    const p = panel;
+    panel = null;
+    if (p.onLeave) p.onLeave();
+  }
+  function open(html, style, keepScroll = false) {
+    if (!keepScroll) leavePanel(); // 換成別的卡片：先收掉自訂面板
+    const top = cardContent.scrollTop;
     cardContent.innerHTML = html;
     card.setAttribute("style", style || "");
     card.hidden = false;
-    card.classList.remove("full");
+    if (!keepScroll) card.classList.remove("full");
     body.classList.add("has-card");
-    cardContent.scrollTop = 0;
+    cardContent.scrollTop = keepScroll ? top : 0;
     if (onePanel()) closeList(true);
+    if (isMobile()) setTime(false);
     app.layoutChanged();
   }
+  function showPanel(html, style, onClick, { keep = false, onLeave = null } = {}) {
+    selected = { island: null, item: null, flow: null };
+    current = null;
+    takeDefault();
+    open(html, style, keep);
+    panel = { onClick, onLeave };
+    renderTree();
+  }
   function hideCard() {
+    leavePanel();
     if (card.hidden) return;
     card.hidden = true;
     body.classList.remove("has-card");
+    current = null;
+    takeDefault();
     app.layoutChanged();
   }
   $("card-close").onclick = () => app.closeCard();
@@ -117,6 +148,19 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
     }
     return isl.id === "tainan" ? "" : `<div class="video-soon">🎬 ${h(isl.title)}的政策影片即將上線</div>`;
   };
+  // 卡片標題下的按鈕：網頁「分享」，總部觸控機「帶走這一項」（掃 QR code）；有設定 LINE 才有「我有話想說」
+  const ACT_ICON = {
+    share: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M8 7.5l4-4 4 4M7 11H5.5v9h13v-9H17"/></svg>',
+    take: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 17.5h2"/></svg>',
+    opinion: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v10H10l-4 3.5v-3.5H5z"/></svg>',
+  };
+  function actsHTML(ctx, extra = "") {
+    current = ctx;
+    const b = kiosk ? [`<button class="act" type="button" data-act="take">${ACT_ICON.take}帶走這一項</button>`] : [`<button class="act" type="button" data-act="share">${ACT_ICON.share}分享</button>`];
+    if (opinionURL(ctx.title)) b.push(`<button class="act" type="button" data-act="opinion">${ACT_ICON.opinion}我有話想說</button>`);
+    return `<div class="c-acts">${b.join("")}${extra}</div>`;
+  }
+
   const flowChips = (isl) => {
     const fl = flowsOf(isl.id);
     if (!fl.length) return "";
@@ -135,6 +179,7 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
     open(`
       <div class="c-head"><div class="c-badge" style="--c:${isl.color};--t:${isl.tint}">${isl.num || isl.badge}</div>
         <div><div class="eyebrow">${isl.num ? "POLICY " + isl.num : "ONE TAINAN"} · ${h(isl.policy)}</div><h2 class="c-title">${h(isl.title)}</h2></div></div>
+      ${actsHTML({ id: isl.id, title: isl.policy, page: isl.id }, isl.game ? '<button class="act game" type="button" data-act="game">🎮 四季農漁接接樂</button>' : "")}
       <p class="c-lead">${h(isl.lead)}</p>
       ${isl.sub ? `<p class="c-sub">${h(isl.sub)}</p>` : ""}
       ${facets}
@@ -147,6 +192,7 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
       ${flowChips(isl)}
       <p class="c-src">依據：${h(srcText([...new Set(isl.items.flatMap((it) => it.src))]))}</p>
     `, `--c:${isl.color};--t:${isl.tint}`);
+    setTake(isl.id, `帶走「${isl.policy}」`);
     renderTree();
   }
 
@@ -160,6 +206,7 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
     open(`
       <div class="c-head"><div class="c-badge round" style="--c:${pc}">${i + 1}</div>
         <div><div class="eyebrow">${isl.num ? isl.num + " " : ""}${h(isl.short)} · 細項 ${circled(i)}</div><h2 class="c-title">${h(it.name)}</h2></div></div>
+      ${actsHTML({ id: it.id, title: it.name, page: isl.id })}
       ${it.tag ? `<div class="chips">${tagHTML(it.tag)}</div>` : ""}
       <div class="facts">${it.facts.map((f, k) => `<div class="fact" style="--c:${pc};--t:${isl.tint}"><b>${k + 1}</b><span>${h(f)}</span></div>`).join("")}</div>
       <p class="c-body">${h(it.body)}</p>
@@ -171,6 +218,7 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
         <button type="button" data-item="${next ? next.id : ""}" ${next ? "" : "disabled"}>下一項 →</button>
       </div>
     `, `--c:${isl.color};--t:${isl.tint}`);
+    setTake(it.id, `帶走「${it.pin || it.name.split("｜").pop()}」`);
     renderTree();
   }
 
@@ -181,16 +229,20 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
     open(`
       <div class="c-head"><div class="c-badge" style="--c:${fromI.color};--t:${fromI.tint}">${f.id}</div>
         <div><div class="eyebrow">串聯線 · ${f.basis === "explicit" ? "新聞稿原文" : "政策主題串聯"}</div><h2 class="c-title">${h(f.text)}</h2></div></div>
+      ${actsHTML({ id: f.id, title: f.text, page: f.from })}
       <div class="route-row"><button class="chip" type="button" data-pick="${fromI.id}" style="--c:${fromI.color}"><i></i>${h(fromI.short)}</button>${f.both ? "⇄" : "→"}${tos.map((t) => `<button class="chip" type="button" data-pick="${t}" style="--c:${byId.get(t).color}"><i></i>${h(byId.get(t).short)}</button>`).join("")}</div>
       <blockquote class="c-quote">${h(f.quote)}<cite>— ${h(SOURCES[f.src] || "")}</cite></blockquote>
       <div class="chips"><span class="chip">走在線上：${h(ROLE_LABEL[f.walker] || "市民")}</span><span class="chip">搬運：${h(CARRY_LABEL[f.carry] || "—")}</span></div>
       <p class="c-src">實線＝新聞稿原文直接寫到的串聯；虛線＝依政策主題整理的串聯。</p>
     `, `--c:${fromI.color};--t:${fromI.tint}`);
+    setTake(f.id, "帶走這條串聯線");
     renderTree();
   }
 
   function showCharacter(kind) {
     selected = { island: null, item: null, flow: null };
+    current = null;
+    takeDefault();
     if (kind === "sister") {
       const isl = byId.get("sister");
       open(`
@@ -206,6 +258,7 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
         <div class="eyebrow">CHARACTER · 妃妃市長</div><h2 class="c-title">騎單車巡島的妃妃市長</h2>
         <p class="c-lead" style="--c:#176b38">綠色・陽光・行動力・台南的未來・一起騎出來！</p>
         <p class="c-sub">她正沿著步道與跨溪大橋，一座一座騎過 7 座政策島，就像持續走遍台南 37 區。</p>
+        <div class="c-acts"><button class="act" type="button" data-act="ask">💬 問妃妃</button><button class="act game" type="button" data-act="game">🎮 四季農漁接接樂</button></div>
         <div class="c-nav"><button type="button" data-pick="tainan">從大台南出發 →</button></div>
         <p class="c-src"><a href="/">回到 6 大政策影片 →</a></p>
       `, "--c:#176b38;--t:#eaf3ec");
@@ -215,6 +268,8 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   function showWalker(w) {
     if (!w.flow) return;
     const f = w.flow;
+    current = null;
+    takeDefault();
     open(`
       <div class="eyebrow">CITIZEN · ${h(ROLE_LABEL[w.role] || "市民")}</div>
       <h2 class="c-title">正在搬運：${h(CARRY_LABEL[w.carry] || "—")}</h2>
@@ -224,6 +279,9 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   }
 
   cardContent.addEventListener("click", (e) => {
+    if (panel && panel.onClick && panel.onClick(e)) return;
+    const a = e.target.closest("[data-act]");
+    if (a) return app.act(a.dataset.act, current);
     const v = e.target.closest("[data-video]");
     if (v) return openVideo(byId.get(v.dataset.video));
     const it = e.target.closest("[data-item]");
@@ -263,6 +321,7 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   }
   function openVideo(isl) {
     if (!isl?.video) return;
+    track("video_play", { island: isl.id });
     $("video-title").textContent = `${isl.title}｜${isl.policy}`;
     const id = encodeURIComponent(isl.video.youtubeId);
     $("video-link").href = `https://www.youtube.com/watch?v=${id}`;
@@ -299,6 +358,52 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   }
   $("video-close").onclick = closeVideo;
   video.addEventListener("click", (e) => { if (e.target === video) closeVideo(); });
+
+  // ---------- 對話框：集章卡、測驗、掃碼帶走 ----------
+  const modal = $("modal"), modalContent = $("modal-content");
+  let modalClosed = null;
+  function openModal(html, { cls = "", label = "", onClose = null } = {}) {
+    if (modalClosed) { const f = modalClosed; modalClosed = null; f(); } // 換內容也算關掉上一個
+    modalClosed = onClose;
+    modalContent.innerHTML = html;
+    modalContent.onclick = null;
+    modal.className = "modal " + cls;
+    $("modal-box").setAttribute("aria-label", label);
+    if (modal.hidden) {
+      modal.hidden = false;
+      app.pauseForModal(true);
+    }
+    modalContent.scrollTop = 0;
+    $("modal-close").focus({ preventScroll: true });
+    return modalContent;
+  }
+  function closeModal() {
+    if (modal.hidden) return;
+    modal.hidden = true;
+    modalContent.innerHTML = "";
+    modalContent.onclick = null;
+    app.pauseForModal(false);
+    if (modalClosed) { const f = modalClosed; modalClosed = null; f(); }
+  }
+  $("modal-close").onclick = closeModal;
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+  // ---------- 總部觸控機：側欄下方的 QR code（掃碼帶走這一項、或在手機上自己逛） ----------
+  let takeKey = "";
+  function setTake(hash, title, sub = "用手機相機掃描，在手機上繼續看") {
+    if (!kiosk) return;
+    const key = hash + "|" + title;
+    if (key === takeKey) return;
+    takeKey = key;
+    $("take-qr").innerHTML = qrSVG(islandURL(hash), { label: title });
+    $("take-title").textContent = title;
+    $("take-sub").textContent = sub;
+  }
+  const takeDefault = () => setTake("", "手機也能玩", "用手機相機掃描，在自己手機上逛政策島");
+  if (kiosk) {
+    $("take").hidden = false;
+    takeDefault();
+  }
 
   // ---------- 側欄開合 ----------
   function openList() {
@@ -382,6 +487,8 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
     { title: "每座島是一項政策", text: "中央是「一個大台南」，周圍 6 座島是科技、農漁、觀光、福利、交通與姐姐市長。曾文溪把島群分成溪北與溪南。", fig: "./img/feifei-stand.jpg" },
     { title: "點一座島，看細項", text: "點島或用右側清單，就能看到每項政策的細項、依據與政策影片；①②③ 是島上的細項。", fig: "./img/feifei-bike.jpg" },
     { title: "看見政策怎麼串聯", text: "打開「串聯線」，小人會沿著線搬運，告訴你交通怎麼帶動觀光、科技怎麼帶動農業。", fig: "./img/sister-main.jpg" },
+    { title: "集章、測驗，一起玩", text: "每走進一座島就蓋一個章，集滿 7 個章領集章卡；「測驗」找出跟你最有關的 3 項政策；按「角色」捏一個自己的小人。", fig: "./img/pose/flag.jpg" },
+    { title: "問妃妃、找寶物", text: "點左下角的妃妃問問題；把鏡頭拉近，島上還藏著 6 樣台南物產等你找；點下方「台南人的一天」看每個時段的政策。", fig: "./img/pose/point.jpg" },
   ];
   let step = 0;
   const intro = $("intro");
@@ -401,7 +508,7 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   }
   function closeIntro() {
     intro.hidden = true;
-    store.set("feifei-island:intro:v1", true);
+    store.set(INTRO_KEY, true);
   }
   $("intro-next").onclick = () => {
     if (step < STEPS.length - 1) { step++; renderStep(); } else closeIntro();
@@ -418,6 +525,7 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
     if (on) {
       $("tour-text").textContent = text || "";
       $("tour-count").textContent = count || "";
+      takeDefault(); // 導覽時 LED 牆前的人看到的是「手機也能玩」
     }
   }
   $("btn-tour").onclick = () => app.toggleTour();
@@ -425,11 +533,14 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   $("btn-home").onclick = () => app.home();
   $("btn-zoom-in").onclick = () => app.zoom(0.78);
   $("btn-zoom-out").onclick = () => app.zoom(1.28);
-  $("mascot").onclick = () => app.selectCharacter("feifei");
+  $("mascot").onclick = () => app.openAsk();
+  $("daybar").onclick = () => app.openDay();
+  $("btn-avatar").onclick = () => app.openAvatar();
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       if (!video.hidden) return closeVideo();
+      if (!modal.hidden) return closeModal();
       if (!intro.hidden) return closeIntro();
       app.closeCard();
     }
@@ -516,6 +627,7 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   // 展示機閒置時回到初始狀態
   function resetForKiosk() {
     closeVideo();
+    closeModal();
     intro.hidden = true;
     search.value = "";
     setTab("policies");
@@ -533,10 +645,16 @@ export function createUI(app, D, { isMobile, onePanel, kiosk = false }) {
   return {
     showIsland, showItem, showFlow, showCharacter, showWalker, hideCard,
     openList, closeList, setToggle, setTimeButtons, setDay, setTour, showIntro,
-    toast, resetForKiosk,
+    toast, resetForKiosk, openModal, closeModal, showPanel,
+    // 島的卡片右上角蓋章
+    markCard(html) {
+      const head = cardContent.querySelector(".c-head");
+      if (head && html && !head.querySelector(".c-stamp")) head.insertAdjacentHTML("beforeend", html);
+    },
+    setStamped(fn) { stamped = fn; renderTree(); },
     get videoOpen() { return !video.hidden; },
-    get introSeen() { return store.get("feifei-island:intro:v1", false); },
-    get modalOpen() { return !video.hidden || !intro.hidden; },
+    get introSeen() { return store.get(INTRO_KEY, false); },
+    get modalOpen() { return !video.hidden || !intro.hidden || !modal.hidden; },
     clearSelection() { selected = { island: null, item: null, flow: null }; renderTree(); },
     panelRects() {
       const rects = [];

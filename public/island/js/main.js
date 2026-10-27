@@ -2,20 +2,31 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { OrbitControls } from "../vendor/addons/OrbitControls.js";
 import { CSS2DRenderer, CSS2DObject } from "../vendor/addons/CSS2DRenderer.js";
-import { DATA } from "./data.js";
-import { layoutIslands, buildIslands, buildGraph, slotLayout, insideHex, TOP, R } from "./world.js";
-import { createEnvironment } from "./env.js";
-import { createKit, setOwnerColor } from "./kit.js";
-import { buildModel, MODEL_TOP, seededRotation } from "./models.js";
-import { decorateIslands, buildSeaDecor, createBirds } from "./decor.js";
-import { createPeople } from "./people.js";
-import { createUI, pinColor } from "./ui.js";
-import { clamp, easeInOutCubic, hexNum } from "./util.js";
+import { DATA } from "./data.js?v=20261027-2";
+import { layoutIslands, buildIslands, buildGraph, slotLayout, insideHex, TOP, R } from "./world.js?v=20261027-2";
+import { createEnvironment } from "./env.js?v=20261027-2";
+import { createKit, setOwnerColor } from "./kit.js?v=20261027-2";
+import { buildModel, MODEL_TOP, seededRotation } from "./models.js?v=20261027-2";
+import { decorateIslands, buildSeaDecor, createBirds } from "./decor.js?v=20261027-2";
+import { createPeople } from "./people.js?v=20261027-2";
+import { createUI, pinColor } from "./ui.js?v=20261027-2";
+import { createStamps } from "./stamps.js?v=20261027-2";
+import { createPlay } from "./play.js?v=20261027-2";
+import { initAnalytics, track } from "./track.js?v=20261027-2";
+import { initVisits } from "./visits.js?v=20261027-2";
+import { createAvatar } from "./avatar.js?v=20261027-2";
+import { createEggs } from "./eggs.js?v=20261027-2";
+import { createGame } from "./game.js?v=20261027-2";
+import { createAsk } from "./ask.js?v=20261027-2";
+import { createDay } from "./day.js?v=20261027-2";
+import { clamp, easeInOutCubic, hexNum } from "./util.js?v=20261027-2";
 
 const params = new URLSearchParams(location.search);
 // 競選總部觸控展示機：?kiosk=1（24 吋橫放觸控螢幕，HDMI 同步輸出到 LED 牆）
 const KIOSK = params.get("kiosk") === "1";
 const IDLE_MS = (Number(params.get("idle")) || 60) * 1000;
+// 版本資料夾（island2）：離線快取的名稱用它開頭，不同版本不會互相清掉
+const FOLDER = new URL("../", import.meta.url).pathname.replace(/\//g, "") || "island";
 const reducedMQ = matchMedia("(prefers-reduced-motion: reduce)");
 // 版面模式：橫放手機（高度很小）用右側浮動面板；直式手機用底部抽屜
 const isLandscapePhone = () => innerHeight <= 500 && innerWidth > innerHeight;
@@ -62,6 +73,8 @@ async function start() {
     fatal("這台裝置的瀏覽器無法顯示 3D 畫面（WebGL 未啟用）。可以改用最新版 Chrome、Safari 或 Edge，或直接觀看政策影片。");
     return;
   }
+  initAnalytics({ kiosk: KIOSK });
+  initVisits({ kiosk: KIOSK });
   const quality = detectQuality();
   const low = quality === "low";
   let reduced = reducedMQ.matches;
@@ -236,11 +249,13 @@ async function start() {
     pins = [];
   }
   const lineMat = new Map();
-  function showPins(islandId) {
+  // ids：只顯示這幾個細項（可以跨島，台南人的一天用）
+  function showPins(islandId, ids = null) {
     clearPins();
-    const isl = L.byId.get(islandId);
-    if (!isl) return;
-    isl.items.forEach((it, i) => {
+    const list = ids
+      ? ids.map((id) => itemInfo.get(id)).filter(Boolean).map((info) => ({ it: L.byId.get(info.island).items[info.index], i: info.index }))
+      : (L.byId.get(islandId)?.items || []).map((it, i) => ({ it, i }));
+    list.forEach(({ it, i }) => {
       const info = itemInfo.get(it.id);
       const el = document.createElement("button");
       el.type = "button";
@@ -369,6 +384,8 @@ async function start() {
   let daySeg = null;
   let tour = null;
   let modalPause = false;
+  let follow = false; // 鏡頭跟著我的角色走
+  let timeHold = false; // 台南人的一天：停在選到的時段
   let lastInput = performance.now();
 
   const tintKey = new Map();
@@ -427,6 +444,9 @@ async function start() {
       if (!opts.fromTour) stopTour();
       state.island = id; state.item = null; state.flow = null;
       ui.showIsland(DATA.islands.find((d) => d.id === id));
+      play.islandShown(id, !!opts.fromTour);
+      if (!opts.fromTour) track("select_island", { island: id });
+      follow = false;
       if (opts.fromTour && isMobile()) ui.hideCard();
       showPins(id);
       updateTints(); updateLabels(); updateFlows();
@@ -434,13 +454,16 @@ async function start() {
       if (opts.fly !== false) { const p = islandPose(isl); flyTo(p.pos, p.target); }
       setHash(id);
     },
-    selectItem(id) {
+    selectItem(id, opts = {}) {
       const info = itemInfo.get(id);
       if (!info) return;
-      stopTour();
+      if (!opts.fromTour) stopTour();
       const changedIsland = state.island !== info.island;
       state.island = info.island; state.item = id; state.flow = null;
       ui.showItem(id);
+      if (!opts.fromTour) { play.itemShown(info.island); track("select_item", { item: id, island: info.island }); }
+      else if (isMobile()) ui.hideCard();
+      follow = false;
       if (changedIsland || !pins.length) showPins(info.island);
       updateTints(); updateLabels(); updateFlows();
       updateViewOffsetTarget();
@@ -455,6 +478,8 @@ async function start() {
       state.flow = id; state.island = null; state.item = null;
       clearPins();
       ui.showFlow(f);
+      track("select_flow", { flow: id });
+      follow = false;
       updateTints(); updateLabels(); updateFlows();
       updateViewOffsetTarget();
       const ids = [f.from, ...(Array.isArray(f.to) ? f.to : [f.to])];
@@ -515,6 +540,44 @@ async function start() {
       if (on === false || tour) stopTour();
       else startTour();
     },
+    startTour(cues, opts) { startTour(cues, opts); },
+    act(name, ctx) {
+      if (name === "game") game.open();
+      else if (name === "ask") ask.open();
+      else play.act(name, ctx);
+    },
+    // 幾個細項一起看（台南人的一天）：鏡頭框住它們
+    focusItems(ids, opts = {}) {
+      const infos = ids.map((id) => itemInfo.get(id)).filter(Boolean);
+      if (!infos.length) return;
+      if (!opts.fromTour) stopTour();
+      state.island = null; state.item = null; state.flow = null;
+      showPins(null, ids);
+      updateTints(); updateLabels(); updateFlows();
+      if (opts.fromTour && isMobile()) ui.hideCard();
+      updateViewOffsetTarget();
+      const tx = infos.reduce((a, i) => a + i.x, 0) / infos.length, tz = infos.reduce((a, i) => a + i.z, 0) / infos.length;
+      const spread = Math.max(...infos.map((i) => Math.hypot(i.x - tx, i.z - tz))) + 1.4;
+      const target = new THREE.Vector3(tx, TOP, tz);
+      const d = clamp(spread * 3.6, 7.5, 36) * (isMobile() ? 1.4 : 1);
+      flyTo(target.clone().addScaledVector(OV_DIR, d), target);
+      follow = false;
+    },
+    flyNear(p, k = 1) {
+      stopTour();
+      const target = new THREE.Vector3(p.x, p.y + 0.2, p.z);
+      const off = new THREE.Vector3(-1.4, 1.9, 2.6).multiplyScalar(k * (isMobile() ? 1.35 : 1));
+      flyTo(target.clone().add(off), target);
+    },
+    followAvatar() { follow = true; },
+    holdTime(on) { timeHold = on; },
+    clock() { return ((clockMin % 1440) + 1440) % 1440; },
+    openAsk() { ask.open(); },
+    openDay() { day.open(); },
+    openAvatar() { avatar.openEditor(); },
+    openGame() { game.open(); },
+    openEggs() { eggs.openList(); },
+    eggsProgress() { return { count: eggs.count, total: eggs.total }; },
     zoom(f) {
       stopTour();
       const off = camera.position.clone().sub(controls.target);
@@ -531,6 +594,25 @@ async function start() {
   };
 
   const ui = createUI(app, DATA, { isMobile: isCompact, onePanel, kiosk: KIOSK });
+
+  // ---------- 集章卡、測驗、分享 ----------
+  let play = null;
+  const stamps = createStamps({ islands: DATA.islands, kiosk: KIOSK, onChange: () => play && play.syncStamps() });
+  play = createPlay({ app, ui, D: DATA, stamps, kiosk: KIOSK, pinColor });
+
+  // ---------- 我的角色、彩蛋、小遊戲、問妃妃、台南人的一天 ----------
+  const avatar = createAvatar(THREE, scene, { L, graph, kiosk: KIOSK, CSS2DObject, ui, app, D: DATA });
+  const eggs = createEggs(THREE, scene, { L, D: DATA, ui, kiosk: KIOSK, CSS2DObject, people, app });
+  const game = createGame({ ui, kiosk: KIOSK, onPolicy: () => app.selectIsland("agriculture") });
+  const ask = createAsk({
+    ui, D: DATA, app,
+    canOpinion: () => play.canOpinion(),
+    actions: {
+      quiz: () => play.openQuiz(), stamps: () => play.openStamps(), eggs: () => eggs.openList(),
+      game: () => game.open(), avatar: () => { ui.closeModal(); avatar.openEditor(); }, opinion: () => play.opinion(""),
+    },
+  });
+  const day = createDay({ ui, D: DATA, app });
 
   // ---------- 台南人的一天 ----------
   const toMin = (s) => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
@@ -563,19 +645,27 @@ async function start() {
   }
 
   // ---------- 導覽 ----------
-  function startTour() {
-    tour = { i: -1, next: 0 };
+  // cues：預設是 data.js 的導覽；測驗結果會帶自己的 3 站（目標可以是島或細項）
+  function startTour(cues = DATA.tour, { loop = KIOSK } = {}) {
+    if (cues === DATA.tour && !KIOSK) track("tour_start");
+    follow = false;
+    tour = { cues, loop, i: -1, next: 0 };
     stepTour();
   }
   function stepTour() {
     if (!tour) return;
     tour.i++;
-    if (tour.i >= DATA.tour.length) {
-      if (KIOSK) tour.i = 0;
+    if (tour.i >= tour.cues.length) {
+      if (tour.loop) tour.i = 0;
       else { stopTour(); return; }
     }
-    const cue = DATA.tour[tour.i];
-    if (cue.target === "all") {
+    const cue = tour.cues[tour.i];
+    if (cue.time != null) app.setTime(cue.time);
+    if (Array.isArray(cue.target)) {
+      app.focusItems(cue.target, { fromTour: true });
+    } else if (itemInfo.has(cue.target)) {
+      app.selectItem(cue.target, { fromTour: true });
+    } else if (cue.target === "all") {
       ui.hideCard();
       state.island = null; state.item = null; state.flow = null;
       clearPins(); updateTints(); updateLabels(); updateFlows(); updateViewOffsetTarget();
@@ -584,8 +674,8 @@ async function start() {
     } else {
       app.selectIsland(cue.target, { fromTour: true });
     }
-    ui.setTour(true, cue.caption, `${tour.i + 1} / ${DATA.tour.length}`);
-    tour.next = performance.now() + (reduced ? 9000 : 7600);
+    ui.setTour(true, cue.caption, `${tour.i + 1} / ${tour.cues.length}`);
+    tour.next = performance.now() + (reduced ? 9000 : itemInfo.has(cue.target) ? 8600 : 7600);
   }
   function stopTour() {
     if (!tour) return;
@@ -600,6 +690,7 @@ async function start() {
   canvas.addEventListener("pointerdown", (e) => {
     down = { x: e.clientX, y: e.clientY, touch: e.pointerType === "touch" };
     fly = null;
+    follow = false;
     lastInput = performance.now();
     if (tour) stopTour();
   });
@@ -620,13 +711,15 @@ async function start() {
     const r = canvas.getBoundingClientRect();
     ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    const targets = [...built.meshes.filter((m) => m.visible), ...tops, people.feifei.group, people.sister.group];
+    const targets = [...eggs.meshes().filter((g) => g.visible), ...avatar.meshes(), ...built.meshes.filter((m) => m.visible), ...tops, people.feifei.group, people.sister.group];
     if (state.toggles.people) targets.push(...people.meshes);
     const hits = ray.intersectObjects(targets, true);
     for (const hit of hits) {
       const o = hit.object;
-      if (o.userData.feifei) return app.selectCharacter("feifei");
-      if (o.userData.sister) return app.selectCharacter("sister");
+      if (o.userData.eggId) return eggs.hit(o.userData.eggId);
+      if (o.userData.avatar) return avatar.openEditor();
+      if (o.userData.feifei) { eggs.feifeiTapped(); return app.selectCharacter("feifei"); }
+      if (o.userData.sister) { eggs.sisterTapped(); return app.selectCharacter("sister"); }
       if (people.meshes.includes(o)) {
         const w = people.walkerAt(o, hit.instanceId);
         if (w && w.flow) {
@@ -671,13 +764,21 @@ async function start() {
     else if (e.key === "+" || e.key === "=") app.zoom(0.8);
     else if (e.key === "-" || e.key === "_") app.zoom(1.25);
   });
-  for (const ev of ["pointerdown", "keydown", "wheel", "touchstart"]) window.addEventListener(ev, () => { lastInput = performance.now(); }, { passive: true });
+  // pointermove：總部觸控機上手指拖著玩小遊戲、捏角色時也算有人在用
+  for (const ev of ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"]) window.addEventListener(ev, () => { lastInput = performance.now(); }, { passive: true });
 
   // ---------- 展示機 ----------
   let updateReady = false;
   function kioskReset() {
     // 有新版本時趁沒人操作重新整理（Chrome --kiosk 視窗重新整理後仍是全螢幕）
     if (updateReady && !document.fullscreenElement) { location.reload(); return; }
+    play.reset();
+    game.stop();
+    ask.reset();
+    avatar.reset();
+    eggs.reset();
+    follow = false;
+    timeHold = false;
     ui.resetForKiosk();
     const defaults = { flows: false, people: true, freeze: false, bird: false };
     for (const [name, on] of Object.entries(defaults)) if (state.toggles[name] !== on) app.toggle(name);
@@ -703,7 +804,7 @@ async function start() {
     if ("serviceWorker" in navigator) {
       if (params.get("nosw") === "1") {
         navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
-        if (window.caches) caches.keys().then((ks) => ks.filter((k) => k.startsWith("island-")).forEach((k) => caches.delete(k))).catch(() => {});
+        if (window.caches) caches.keys().then((ks) => ks.filter((k) => k.startsWith(FOLDER + "-")).forEach((k) => caches.delete(k))).catch(() => {});
       } else {
         const hadController = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController) updateReady = true; });
@@ -794,9 +895,17 @@ async function start() {
     const voChanged = applyViewOffset(dt);
     if (voChanged) dirty = true;
 
-    if (!frozen) {
+    if (!frozen && !timeHold) {
       clockMin = (clockMin + dt * 10) % 1440;
       applyTime(false);
+    }
+    // 鏡頭跟著我的角色走（使用者一碰畫面就停）
+    if (follow && avatar.exists && !fly) {
+      const p = avatar.group.position;
+      const nt = controls.target.clone().lerp(new THREE.Vector3(p.x, p.y + 0.2, p.z), Math.min(1, dt * 2.5));
+      camera.position.add(nt.clone().sub(controls.target));
+      controls.target.copy(nt);
+      dirty = true;
     }
     if (tour && now > tour.next) stepTour();
     // 展示機閒置就重置；影片播放中放寬到 4 分鐘，免得民眾看到一半被切掉
@@ -811,9 +920,13 @@ async function start() {
       env.update(dt, time);
       birds.update(time);
       people.update(dt, time, false, camDist);
+      avatar.update(dt, time, false, camDist, camera);
+      eggs.update(time, camDist, false);
       for (const m of flowMats) m.uniforms.uTime.value = time % 600; // GPU 是 32 位元浮點，時間取餘數避免長時間運作後失真
     } else if (dirty) {
       people.update(0, time, true, camDist);
+      avatar.update(0, time, true, camDist, camera);
+      eggs.update(time, camDist, true);
     }
 
     if (animate || dirty) {
@@ -853,19 +966,29 @@ async function start() {
   labelRenderer.render(scene, camera);
   requestAnimationFrame(frame);
 
-  // 深層連結：#technology、#tech-sci、#F1
-  const hash = decodeURIComponent(location.hash.replace(/^#/, ""));
+  // 深層連結：#technology、#tech-sci、#F1；#quiz、#quiz=…（測驗結果）、#stamps、#stamps=done
+  function openHash(h) {
+    if (!h) return false;
+    if (L.byId.has(h)) app.selectIsland(h);
+    else if (itemInfo.has(h)) app.selectItem(h);
+    else if (DATA.flows.some((f) => f.id === h)) app.selectFlow(h);
+    else if (!KIOSK && play.route(h)) setHash("");
+    else return false;
+    return true;
+  }
+  const readHash = () => { try { return decodeURIComponent(location.hash.replace(/^#/, "")); } catch { return ""; } };
+  const hash = readHash();
   setTimeout(() => {
     $("loading").classList.add("done");
-    if (hash && L.byId.has(hash)) app.selectIsland(hash);
-    else if (hash && itemInfo.has(hash)) app.selectItem(hash);
-    else if (hash && DATA.flows.some((f) => f.id === hash)) app.selectFlow(hash);
-    if (KIOSK) setTimeout(startTour, 2500);
+    openHash(hash);
+    if (KIOSK) setTimeout(() => startTour(), 2500);
     else if (!ui.introSeen && !hash) ui.showIntro();
   }, 350);
+  // 頁面開著時點到別的連結（只換 # 後面）也要跟著開
+  window.addEventListener("hashchange", () => openHash(readHash()));
 
   // 給自動化測試與除錯用
-  window.__island = { app, state, L, camera, controls, renderer, itemInfo, get dpr() { return dpr; }, quality };
+  window.__island = { app, state, L, camera, controls, renderer, itemInfo, stamps, play, ui, avatar, eggs, game, ask, day, get dpr() { return dpr; }, get clock() { return clockMin; }, quality };
 }
 
 start().catch((err) => {
