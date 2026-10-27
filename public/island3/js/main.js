@@ -2,23 +2,24 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { OrbitControls } from "../vendor/addons/OrbitControls.js";
 import { CSS2DRenderer, CSS2DObject } from "../vendor/addons/CSS2DRenderer.js";
-import { DATA } from "./data.js?v=20261026";
-import { layoutIslands, buildIslands, buildGraph, slotLayout, insideHex, TOP, R } from "./world.js?v=20261026";
-import { createEnvironment } from "./env.js?v=20261026";
-import { createKit, setOwnerColor } from "./kit.js?v=20261026";
-import { buildModel, MODEL_TOP, seededRotation } from "./models.js?v=20261026";
-import { decorateIslands, buildSeaDecor, createBirds } from "./decor.js?v=20261026";
-import { createPeople } from "./people.js?v=20261026";
-import { createUI, pinColor } from "./ui.js?v=20261026";
-import { createStamps } from "./stamps.js?v=20261026";
-import { createPlay } from "./play.js?v=20261026";
-import { initAnalytics, track } from "./track.js?v=20261026";
-import { createAvatar } from "./avatar.js?v=20261026";
-import { createEggs } from "./eggs.js?v=20261026";
-import { createGame } from "./game.js?v=20261026";
-import { createAsk } from "./ask.js?v=20261026";
-import { createDay } from "./day.js?v=20261026";
-import { clamp, easeInOutCubic, hexNum } from "./util.js?v=20261026";
+import { DATA } from "./data.js?v=20261027";
+import { layoutIslands, buildIslands, buildGraph, slotLayout, insideHex, TOP, R } from "./world.js?v=20261027";
+import { createEnvironment } from "./env.js?v=20261027";
+import { createKit, setOwnerColor } from "./kit.js?v=20261027";
+import { buildModel, MODEL_TOP, seededRotation } from "./models.js?v=20261027";
+import { decorateIslands, buildSeaDecor, createBirds } from "./decor.js?v=20261027";
+import { createPeople } from "./people.js?v=20261027";
+import { createUI, pinColor } from "./ui.js?v=20261027";
+import { createStamps } from "./stamps.js?v=20261027";
+import { createPlay } from "./play.js?v=20261027";
+import { initAnalytics, track } from "./track.js?v=20261027";
+import { initVisits } from "./visits.js?v=20261027";
+import { createAvatar } from "./avatar.js?v=20261027";
+import { createEggs } from "./eggs.js?v=20261027";
+import { createGame } from "./game.js?v=20261027";
+import { createAsk } from "./ask.js?v=20261027";
+import { createDay } from "./day.js?v=20261027";
+import { clamp, easeInOutCubic, hexNum } from "./util.js?v=20261027";
 
 const params = new URLSearchParams(location.search);
 // 競選總部觸控展示機：?kiosk=1（24 吋橫放觸控螢幕，HDMI 同步輸出到 LED 牆）
@@ -73,6 +74,7 @@ async function start() {
     return;
   }
   initAnalytics({ kiosk: KIOSK });
+  initVisits({ kiosk: KIOSK });
   const quality = detectQuality();
   const low = quality === "low";
   let reduced = reducedMQ.matches;

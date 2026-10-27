@@ -28,9 +28,9 @@
   // 網址少了結尾斜線時補上（/island2 → /island2/），讓相對路徑的素材都能正確載入
   if (/^\/[^/.]+$/.test(location.pathname)) location.replace(location.pathname + "/" + location.search + location.hash);
 </script>
-<link rel="stylesheet" href="./island.css?v=20261026">
+<link rel="stylesheet" href="./island.css?v=20261027">
 <link rel="modulepreload" href="./vendor/three.module.min.js">
-<link rel="modulepreload" href="./js/main.js?v=20261026">
+<link rel="modulepreload" href="./js/main.js?v=20261027">
 </head>
 <body>
 <main id="app">
@@ -112,6 +112,7 @@
       <div class="take-qr" id="take-qr"></div>
       <div class="take-text"><b id="take-title">手機也能玩</b><span id="take-sub"></span></div>
     </div>
+    <div class="visits visits-side" hidden></div>
     <div class="side-foot">
       <a href="/">← 回到 6 大政策影片</a>
       <span>內容整理自競選總部新聞稿</span>
@@ -136,6 +137,8 @@
     <img src="./img/feifei-face.jpg" alt="" width="40" height="40">
     <span id="mascot-text">有問題？問妃妃</span>
   </button>
+
+  <div class="visits visits-float" hidden></div>
 
   <div id="tour-caption" class="tour-caption" hidden>
     <p id="tour-text"></p>
@@ -189,6 +192,6 @@
     </div>
   </noscript>
 </main>
-<script type="module" src="./js/main.js?v=20261026"></script>
+<script type="module" src="./js/main.js?v=20261027"></script>
 </body>
 </html>

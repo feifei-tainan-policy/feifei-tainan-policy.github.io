@@ -1352,6 +1352,56 @@ body.kiosk .gm-title { font-size: 21px; }
 body.kiosk .egg-row b { font-size: 18px; }
 body.kiosk .egg-row small { font-size: 15px; }
 
+/* ---------- 來站計數器（早期網頁的「您是第 N 位訪客」）：電腦放清單底部，手機放妃妃上方 ---------- */
+.visits { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--muted); }
+.visits[hidden] { display: none; }
+.visits small { flex-basis: 100%; text-align: center; font: 700 9px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: 2px; color: #a39a8c; }
+.odo { display: inline-flex; gap: 2px; padding: 3px; border-radius: 6px; background: #2b2723; box-shadow: inset 0 1px 3px rgba(0, 0, 0, .7), 0 1px 0 #fff; }
+.odo i {
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 20px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: linear-gradient(#0d0c0b, #3b3732 48%, #24211e 52%, #0d0c0b);
+  font: 700 15px/20px ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-style: normal;
+  color: #fff8e1;
+  text-align: center;
+}
+.odo i:last-child { background: linear-gradient(#5c0f22, #b3304d 48%, #9c2742 52%, #5c0f22); }
+.odo i::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(0, 0, 0, .5); }
+.odo span { display: block; animation: odo-roll .7s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 80ms); }
+@keyframes odo-roll { from { transform: translateY(-110%); } to { transform: none; } }
+.visits-side { padding: 10px 16px 0; border-top: 1px solid var(--line); }
+.visits-side:not([hidden]) + .side-foot { border-top: 0; }
+.visits-float { display: none; }
+@media (max-width: 800px), (max-height: 500px) and (orientation: landscape) {
+  .visits-side { display: none !important; }
+  .visits-float:not([hidden]) {
+    position: absolute;
+    left: calc(10px + var(--safe-l));
+    bottom: calc(66px + var(--safe-b));
+    z-index: 4;
+    display: flex;
+    padding: 5px 10px;
+    border: 1px solid #fff;
+    border-radius: 12px;
+    background: rgba(255, 253, 248, .92);
+    box-shadow: 0 3px 12px rgba(60, 40, 20, .12);
+    font-size: 11px;
+    transition: opacity .3s;
+  }
+  .visits-float small { display: none; }
+  .visits-float .odo i { width: 12px; height: 17px; font-size: 13px; line-height: 17px; }
+  body.has-card .visits-float, body.touring .visits-float, body.m-time .visits-float, body:not(.side-closed) .visits-float { opacity: 0; pointer-events: none; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .visits-float:not([hidden]) { left: calc(8px + var(--safe-l)); bottom: calc(8px + var(--safe-b)); }
+}
+body.kiosk .visits { display: none !important; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
