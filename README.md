@@ -377,6 +377,18 @@ node scripts/island-share-pages.mjs island3          # 重新產生分享頁（s
   總部觸控機不計也不顯示，服務連不上時整塊不出現。設定在 `js/data.js` 的 `visits`，`api` 改成 `""` 就收起來
 預覽圖 `img/og/*.jpg` 是用 3D 場景實際拍下來的，改了島上的內容想更新預覽圖，再請工程端重拍。
 
+### 同步到 yes100.ai/island
+
+<https://yes100.ai/island/> 是 island3 的同步複本，放在 repo
+[feifei-tainan-policy/yes100.ai](https://github.com/feifei-tainan-policy/yes100.ai)（GitHub Pages，網域在 Namecheap）。
+
+- 官網每次部署成功，GitHub Actions 的 **Sync island3 to yes100.ai**（`.github/workflows/sync-yes100.yml`）就會執行
+  `scripts/island-mirror.mjs`，把 `public/island3` 複製過去再推上 yes100.ai repo；要手動同步就在 Actions 按 Run workflow
+- 複本裡分享用的網址（`og:url`、`og:image`、分享頁）換成 yes100.ai，`canonical` 保留原站；「回到 6 大政策影片」連回官網首頁；
+  用到的 `/favicon*`、`/posters/` 一起複製
+- 推送用的是 yes100.ai repo 的 deploy key（只能寫那個 repo），私鑰存在這個 repo 的 secret `YES100_DEPLOY_KEY`
+- 之後要改成同步別的版本（例如 island4），把 workflow 裡的 `island3` 換掉即可
+
 ## 版權與安全
 
 - 權利說明：[`COPYRIGHT.md`](COPYRIGHT.md)

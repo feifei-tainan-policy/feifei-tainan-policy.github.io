@@ -1,0 +1,57 @@
+name: Sync island3 to yes100.ai
+
+# 官網部署成功後，把 public/island3 同步到 https://yes100.ai/island/（repo：feifei-tainan-policy/yes100.ai）。
+# 需要 secret YES100_DEPLOY_KEY：yes100.ai repo 的 deploy key 私鑰（有寫入權限，只能動那個 repo）。
+on:
+  workflow_run:
+    workflows: ["Deploy GitHub Pages"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-yes100
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - name: Checkout site
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Checkout yes100.ai
+        uses: actions/checkout@v7
+        with:
+          repository: feifei-tainan-policy/yes100.ai
+          ssh-key: ${{ secrets.YES100_DEPLOY_KEY }}
+          path: mirror
+
+      - name: Build mirror
+        run: node scripts/island-mirror.mjs island3 mirror https://yes100.ai/island/
+
+      - name: Push
+        working-directory: mirror
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "island3 沒有變更"
+            exit 0
+          fi
+          git commit -m "同步 island3（${SHA:0:7}）"
+          git push
