@@ -1,6 +1,6 @@
 // 環境：天空、日夜、光線、海、台南地形（西邊台灣海峽、東邊平原與丘陵、曾文溪、魚塭、月世界）
-import { WATER_Y } from "./world.js?v=20261028";
-import { clamp, smoothstep, makeNoise2D, fbm, mulberry32, mixHex } from "./util.js?v=20261028";
+import { WATER_Y } from "./world.js?v=20261028-2";
+import { clamp, smoothstep, makeNoise2D, fbm, mulberry32, mixHex } from "./util.js?v=20261028-2";
 
 // 分鐘, skyTop, horizon, sunColor, sunI, hemiSky, hemiGround, hemiI, night, water
 const KEYS = [

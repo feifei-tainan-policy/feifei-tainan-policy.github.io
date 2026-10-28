@@ -508,7 +508,7 @@ export const DATA = {
       sub: "把公園變成孩子期待、家長安心的親子友善空間。",
       quote: "教育不是口號，而是信仰。讓孩子快樂學，也能勇敢追夢。",
       source: "pr-1108",
-      video: null,
+      video: { youtubeId: "YIkcp3WUnBo", poster: "/posters/sister.jpg" },
       items: [
         {
           id: "sis-parks",

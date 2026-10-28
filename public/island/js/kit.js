@@ -1,7 +1,7 @@
 // 實例化零件庫：建模函式只把 {kind, matrix, color, owner} 推進陣列，
 // 最後每種「幾何 × 材質 × LOD」只建一個 InstancedMesh，靜態物件合計約 30–40 個 draw call。
 import { RoundedBoxGeometry } from "../vendor/addons/RoundedBoxGeometry.js";
-import { mixHex } from "./util.js?v=20261028";
+import { mixHex } from "./util.js?v=20261028-2";
 
 function gableGeometry(THREE) {
   // 三角柱屋頂：底寬 1（x）、高 1（y）、深 1（z），屋脊沿 z
