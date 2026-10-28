@@ -1,11 +1,11 @@
 // 世界佈局：六角島、步道環、橋、曾文溪河道、行人路網、細項配置
-import { canvasTexture, mulberry32, hashString, hexNum, mixHex } from "./util.js?v=20261028-2";
+import { canvasTexture, mulberry32, hashString, hexNum, mixHex } from "./util.js?v=20261029";
 
 export const R = 2.02; // 六角形外接半徑（pointy-top，頂點朝 ±z）
-export const SPACING = 2.28;
+export const SPACING = 2.36;
 export const TOP = 0.65;
 export const WATER_Y = -0.18;
-export const RING_R = 1.8; // 步道環外接半徑
+export const RING_R = 1.74; // 步道環外接半徑
 export const INNER = 1.36; // 建物區內切半徑
 export const NORTH_SHIFT = 1.15; // 溪北島群往北推，讓出曾文溪河道
 const RM = RING_R * Math.cos(Math.PI / 6); // 步道環邊中點半徑
@@ -20,11 +20,11 @@ const AXIAL_DIRS = [
   [1, -1], // 5: 東北 300°
 ];
 
-export function axialToWorld(q, r) {
+export function tileToWorld(q, r) {
   return { x: Math.sqrt(3) * SPACING * (q + r / 2), z: 1.5 * SPACING * r };
 }
 
-export function insideHex(x, z, inradius) {
+export function withinHex(x, z, inradius) {
   // pointy-top：三組邊法線 0°、60°、120°
   const a = Math.abs(x);
   const b = Math.abs(x * 0.5 + z * 0.8660254);
@@ -34,7 +34,7 @@ export function insideHex(x, z, inradius) {
 
 export function layoutIslands(D) {
   const islands = D.islands.map((d, index) => {
-    const w = axialToWorld(d.axial[0], d.axial[1]);
+    const w = tileToWorld(d.axial[0], d.axial[1]);
     const z = w.z - (d.north ? NORTH_SHIFT : 0);
     return { ...d, index, cx: w.x, cz: z };
   });
@@ -177,7 +177,7 @@ function hexRing(THREE, rOut, rIn, y) {
 }
 
 // ---------- 建島 ----------
-export function buildIslands(THREE, scene, L, kit, { waterMaterial } = {}) {
+export function placeIslands(THREE, scene, L, kit, { waterMaterial } = {}) {
   const group = new THREE.Group();
   group.name = "islands";
   const tops = [];
@@ -301,7 +301,7 @@ export function buildIslands(THREE, scene, L, kit, { waterMaterial } = {}) {
 }
 
 // ---------- 行人路網（Dijkstra） ----------
-export function buildGraph(L, bridges) {
+export function makePathNetwork(L, bridges) {
   const nodes = []; // {id, x, z, island}
   const adj = new Map();
   const key = (isl, j) => `${isl}:${j}`;
@@ -374,7 +374,7 @@ export function slotLayout(count, heroIndex) {
     for (let c = -rows; c <= rows; c++) {
       const x = c * cell + (Math.abs(r) % 2) * (cell / 2);
       const z = r * cell * 0.866 + 0.18;
-      if (!insideHex(x, z, INNER - cell * 0.42)) continue;
+      if (!withinHex(x, z, INNER - cell * 0.42)) continue;
       // 主建物佔 (0,-0.58) 一帶
       if (Math.abs(x) < 0.72 && z < -0.02) continue;
       pts.push({ x, z, d: Math.hypot(x * 0.9, z - 0.45) });

@@ -300,13 +300,12 @@ VITE_BASE_PATH=/
 <https://feifei-tainan-policy.com/island> 是一座 3D 互動政策島：中央「一個大台南」加上 6 大政策島，
 曾文溪把島群分成溪北與溪南。點島或用右側清單可以看細項、依據與政策影片，「串聯線」顯示政策之間的關係。
 
-目前的版本（2026-10-27 起把原本的 `/island` 與 `/island3` 對調）：
+目前只有 `/island` 一個版本（舊的 `/island2`、`/island3` 已退役，開啟會自動轉到 `/island`）：
 
 | 網址 | 內容 |
 |---|---|
-| `/island` | 最新版：下面「island2 新增」與「原本 island3 的新功能」全部都有 |
-| `/island2` | 2026-10-26 的版本：集章卡、測驗、分享、LINE 意見 |
-| `/island3` | 2026-10-25 的最初版本（原本的 `/island`）；原本 island3 的分享連結（`/island3/s/…`）會轉到 `/island` |
+| `/island` | 台南政策島：集章卡、測驗、分享、LINE 意見、台南人的一天、問妃妃、頭像、彩蛋、四季遊戲、來站計數器 |
+| `/island2`、`/island3` | 已退役的舊版，開啟會自動轉到 `/island` |
 
 - 位置：`public/island/`，原生 ES Modules，不經過 Vite 打包，`npm run build` 時原樣複製到 `dist/island/`
 - 3D 引擎：Three.js r160，放在 `public/island/vendor/`（MIT 授權），不依賴 CDN，iOS 15 以上可用
@@ -335,12 +334,11 @@ VITE_BASE_PATH=/
 
 改版政策島時執行 `node scripts/island-version.mjs island <日期版本>`（更新 `?v=` 與 `sw.js` 的版本號），展示機才會換成新版。
 
-## 政策島的互動功能（island2 起）
+## 政策島的互動功能
 
-<https://feifei-tainan-policy.com/island2/>（`public/island2/`）加上了下面這些互動功能，現在的 `/island` 也都有。
-各版本資料夾可以並存、分開修改；總部觸控機開 `https://feifei-tainan-policy.com/island/?kiosk=1`。
+`/island` 具備下面這些互動功能（在專案演進中陸續加入）。總部觸控機開 `https://feifei-tainan-policy.com/island/?kiosk=1`。
 
-island2 新增：
+功能一覽：
 
 - **集章卡**：自己點進一座島（或島上的細項）就蓋一個章，工具列「集章」看進度；7 座島集滿可以存成「我的台南集章卡」圖片。
   網頁版記在這台裝置的瀏覽器；總部觸控機只記在記憶體，閒置重置時歸零，集滿後掃 QR code 在手機上領集章卡
@@ -363,10 +361,9 @@ node scripts/island-share-pages.mjs island4          # 重新產生分享頁（s
 
 `island-version.mjs` 也會把 `index.html` 裡 `canonical`、`og:url`、`og:image` 的資料夾名稱換成新的。
 
-### 原本 island3 的新功能（現在在 /island）
+### 其他互動功能
 
-下面這些功能原本在 `/island3`，2026-10-27 起換到 <https://feifei-tainan-policy.com/island/>（總部觸控機：`/island/?kiosk=1`）。
-導覽說明的「看過了」記號改成 v2，看過舊版說明的人會再看到一次新版說明。
+這些功能都在 <https://feifei-tainan-policy.com/island/>（總部觸控機：`/island/?kiosk=1`）。
 
 - **台南人的一天可以點**：點畫面下方的時段條，列出一天 8 個時段；點一個時段，時間會停在那一段、鏡頭帶到相關政策並標出名稱。
   「播放一整天」會自動走過 8 個時段。時段與政策的對應在 `js/data.js` 的 `dayCycle`

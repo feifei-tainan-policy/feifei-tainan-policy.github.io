@@ -1,19 +1,19 @@
 // 環境：天空、日夜、光線、海、台南地形（西邊台灣海峽、東邊平原與丘陵、曾文溪、魚塭、月世界）
-import { WATER_Y } from "./world.js?v=20261028-2";
-import { clamp, smoothstep, makeNoise2D, fbm, mulberry32, mixHex } from "./util.js?v=20261028-2";
+import { WATER_Y } from "./world.js?v=20261029";
+import { clamp, smoothstep, makeNoise2D, fbm, mulberry32, mixHex } from "./util.js?v=20261029";
 
 // 分鐘, skyTop, horizon, sunColor, sunI, hemiSky, hemiGround, hemiI, night, water
 const KEYS = [
-  [0, 0x1e2c58, 0x3f4f80, 0xb4c2ff, 1.15, 0x94a2d8, 0x64566a, 1.85, 1, 0x5a88b2],
-  [300, 0x26365f, 0x4c5688, 0xb8c4ff, 1.0, 0x96a4da, 0x66586c, 1.85, 1, 0x5c8ab4],
-  [360, 0x7f8fc4, 0xf6c3a6, 0xffb48a, 1.3, 0xf3c6b5, 0x6b5a5a, 1.1, 0.55, 0x8fb7c4],
-  [450, 0xa9d1ea, 0xfbe6d3, 0xffe2c4, 2.4, 0xeaf2f6, 0x8a7a68, 1.25, 0, 0x9fcfd6],
-  [720, 0x9fd0ec, 0xf4eee3, 0xfff1de, 2.9, 0xeef6fa, 0x8f8270, 1.35, 0, 0xa9d8db],
-  [960, 0xa6cfe6, 0xf8e7d2, 0xffe3c0, 2.5, 0xf1efe8, 0x8a7a66, 1.25, 0, 0x9fcbd2],
-  [1065, 0x8b8fc4, 0xf7b98f, 0xff9f6a, 1.8, 0xf6d2bc, 0x7d6660, 1.2, 0.3, 0x93a9bd],
-  [1140, 0x5a5e9e, 0xd99aa6, 0xff9a7a, 1.3, 0xc0b2e0, 0x655868, 1.35, 0.75, 0x6a7cab],
-  [1260, 0x22325f, 0x445488, 0xc0ccff, 1.2, 0x98a8dc, 0x685a6e, 1.9, 1, 0x5a88b2],
-  [1440, 0x1e2c58, 0x3f4f80, 0xb4c2ff, 1.15, 0x94a2d8, 0x64566a, 1.85, 1, 0x5a88b2],
+  [0, 0x172544, 0x36476f, 0xaec0f2, 1.15, 0x8f9ed2, 0x5f5668, 1.85, 1, 0x4e7ba6],
+  [300, 0x1f3160, 0x495684, 0xb6c4f6, 1.0, 0x93a2d6, 0x615a6a, 1.85, 1, 0x5080ac],
+  [360, 0x8382b4, 0xf8c0a0, 0xffb07e, 1.3, 0xf2c3b0, 0x6a5a56, 1.1, 0.55, 0x8fb4c2],
+  [450, 0xa6cfe8, 0xfce7d0, 0xffe6c2, 2.4, 0xe9f1f5, 0x887965, 1.25, 0, 0x9ecfd8],
+  [720, 0x93ccec, 0xf7f0e2, 0xfff3d9, 3.0, 0xedf6f9, 0x8d8068, 1.35, 0, 0xa4d6da],
+  [960, 0xa3cfe6, 0xfae8cf, 0xffe4ba, 2.5, 0xf0efe6, 0x8a7b64, 1.25, 0, 0x9cccd1],
+  [1065, 0x8a84b6, 0xf8ad7c, 0xff9456, 1.9, 0xf6cdb1, 0x7b645c, 1.2, 0.3, 0x8fa2b6],
+  [1140, 0x53508e, 0xdb94a4, 0xff916f, 1.35, 0xbcaade, 0x62545f, 1.35, 0.75, 0x62749b],
+  [1260, 0x1d2d57, 0x41527f, 0xbac6f8, 1.2, 0x95a4d8, 0x635a6a, 1.9, 1, 0x4e7ba6],
+  [1440, 0x172544, 0x36476f, 0xaec0f2, 1.15, 0x8f9ed2, 0x5f5668, 1.85, 1, 0x4e7ba6],
 ];
 
 function sampleKeys(min) {
@@ -38,17 +38,17 @@ export function riverZ(x) {
   return -2.35 - Math.max(0, x - 9) * 0.11 + 1.3 * Math.sin(Math.max(0, x - 9) * 0.09);
 }
 
-export function createEnvironment(THREE, scene, { quality = "high", reduced = false, center = { x: 0, z: 0 } } = {}) {
+export function makeScenery(THREE, scene, { quality = "high", reduced = false, center = { x: 0, z: 0 } } = {}) {
   const low = quality === "low";
   const noise = makeNoise2D(20261124);
   const noise2 = makeNoise2D(400);
 
   // ---------- 天空 ----------
   const skyU = {
-    uTop: { value: new THREE.Color(0x9fd0ec) },
-    uHorizon: { value: new THREE.Color(0xf4eee3) },
+    uTop: { value: new THREE.Color(0x93ccec) },
+    uHorizon: { value: new THREE.Color(0xf7f0e2) },
     uSunDir: { value: new THREE.Vector3(0.3, 0.6, 0.7) },
-    uSun: { value: new THREE.Color(0xfff1de) },
+    uSun: { value: new THREE.Color(0xfff3d9) },
     uNight: { value: 0 },
   };
   const sky = new THREE.Mesh(
@@ -81,12 +81,12 @@ export function createEnvironment(THREE, scene, { quality = "high", reduced = fa
   sky.frustumCulled = false;
   scene.add(sky);
 
-  scene.fog = new THREE.Fog(0xf4eee3, 42, 150);
+  scene.fog = new THREE.Fog(0xf7f0e2, 42, 150);
 
   // ---------- 光線 ----------
-  const hemi = new THREE.HemisphereLight(0xeef6fa, 0x8f8270, 1.3);
+  const hemi = new THREE.HemisphereLight(0xedf6f9, 0x8d8068, 1.35);
   scene.add(hemi);
-  const sun = new THREE.DirectionalLight(0xfff1de, 2.8);
+  const sun = new THREE.DirectionalLight(0xfff3d9, 2.9);
   sun.castShadow = true;
   const sm = quality === "high" ? 2048 : 1024;
   sun.shadow.mapSize.set(sm, sm);
@@ -98,7 +98,7 @@ export function createEnvironment(THREE, scene, { quality = "high", reduced = fa
   scene.add(sun);
   scene.add(sun.target);
   sun.target.position.set(center.x, 0, center.z);
-  const fill = new THREE.DirectionalLight(0xbfd6ff, 0.35);
+  const fill = new THREE.DirectionalLight(0xbcd4fb, 0.35);
   fill.position.set(-20, 18, -14);
   scene.add(fill);
 
@@ -107,8 +107,8 @@ export function createEnvironment(THREE, scene, { quality = "high", reduced = fa
     THREE.UniformsLib.fog,
     {
       uTime: { value: 0 },
-      uShallow: { value: new THREE.Color(0xa4d4da) },
-      uDeep: { value: new THREE.Color(0x6fa9b8) },
+      uShallow: { value: new THREE.Color(0x9fd3d7) },
+      uDeep: { value: new THREE.Color(0x6aa5b5) },
       uCenter: { value: new THREE.Vector2(center.x, center.z) },
       uNight: { value: 0 },
     },

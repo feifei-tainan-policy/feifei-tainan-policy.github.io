@@ -1,10 +1,10 @@
 // 小人、串聯線上的搬運者、騎單車的妃妃市長、抱小熊的姐姐妃妃
-import { TOP } from "./world.js?v=20261028-2";
-import { mulberry32, clamp } from "./util.js?v=20261028-2";
+import { TOP } from "./world.js?v=20261029";
+import { mulberry32, clamp } from "./util.js?v=20261029";
 
 export const SISTER_SPOT = [-0.12, 1.42];
-const SKIN = [0xf3cfae, 0xe6b48f, 0xcf9670, 0xf0c4a0];
-const HAIR = [0x2e2522, 0x4a3426, 0x1f1d22, 0x6b4a33, 0xdedede];
+const SKIN = [0xf5d0b0, 0xddb089, 0xc68e63, 0xecbf98];
+const HAIR = [0x2b2420, 0x46321f, 0x24201d, 0x5f432f, 0xdad7d2];
 const CASUAL = [0x6f7fb5, 0x58a6a6, 0xe8c547, 0xf2a1a1, 0x8fb37a, 0xb58fd0, 0xf29a3b];
 
 // 角色：衣服顏色、帽子、手上物品
@@ -49,7 +49,7 @@ function makeMesh(THREE, geo, mat, n, scene) {
   return m;
 }
 
-export function createPeople(THREE, scene, { L, graph, flows, reduced, quality }) {
+export function makePeople(THREE, scene, { L, graph, flows, reduced, quality }) {
   const rnd = mulberry32(400);
   const walkers = [];
   const low = quality === "low";

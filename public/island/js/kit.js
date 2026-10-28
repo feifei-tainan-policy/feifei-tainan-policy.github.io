@@ -1,7 +1,7 @@
 // 實例化零件庫：建模函式只把 {kind, matrix, color, owner} 推進陣列，
 // 最後每種「幾何 × 材質 × LOD」只建一個 InstancedMesh，靜態物件合計約 30–40 個 draw call。
 import { RoundedBoxGeometry } from "../vendor/addons/RoundedBoxGeometry.js";
-import { mixHex } from "./util.js?v=20261028-2";
+import { mixHex } from "./util.js?v=20261029";
 
 function gableGeometry(THREE) {
   // 三角柱屋頂：底寬 1（x）、高 1（y）、深 1（z），屋脊沿 z
@@ -48,7 +48,7 @@ export function createGeometries(THREE, quality = "high") {
   return G;
 }
 
-export function createKit(THREE, { jitterSeed = 7, quality = "high" } = {}) {
+export function makeKit(THREE, { jitterSeed = 7, quality = "high" } = {}) {
   const G = createGeometries(THREE, quality);
   const solid = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.78, metalness: 0 });
   const glow = new THREE.MeshStandardMaterial({

@@ -1,6 +1,6 @@
 // 每個細項的小型立體場景模型。單位空間：底面 ±0.5、高 0–1.5，正面朝 +z（鏡頭方向）。
 // 模型種類由 data.js 的 model 欄位決定。
-import { mulberry32, hashString, mixHex, hexNum } from "./util.js?v=20261028-2";
+import { mulberry32, hashString, mixHex, hexNum } from "./util.js?v=20261029";
 
 export const C = {
   coral: 0xdb6a41, ink: 0x2a2523, cream: 0xfff8f4, yellow: 0xfcea8b, stone: 0xc5b5a7, sage: 0x71806a,

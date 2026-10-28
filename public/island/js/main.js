@@ -2,24 +2,24 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { OrbitControls } from "../vendor/addons/OrbitControls.js";
 import { CSS2DRenderer, CSS2DObject } from "../vendor/addons/CSS2DRenderer.js";
-import { DATA } from "./data.js?v=20261028-2";
-import { layoutIslands, buildIslands, buildGraph, slotLayout, insideHex, TOP, R } from "./world.js?v=20261028-2";
-import { createEnvironment } from "./env.js?v=20261028-2";
-import { createKit, setOwnerColor } from "./kit.js?v=20261028-2";
-import { buildModel, MODEL_TOP, seededRotation } from "./models.js?v=20261028-2";
-import { decorateIslands, buildSeaDecor, createBirds } from "./decor.js?v=20261028-2";
-import { createPeople } from "./people.js?v=20261028-2";
-import { createUI, pinColor } from "./ui.js?v=20261028-2";
-import { createStamps } from "./stamps.js?v=20261028-2";
-import { createPlay } from "./play.js?v=20261028-2";
-import { initAnalytics, track } from "./track.js?v=20261028-2";
-import { initVisits } from "./visits.js?v=20261028-2";
-import { createAvatar } from "./avatar.js?v=20261028-2";
-import { createEggs } from "./eggs.js?v=20261028-2";
-import { createGame } from "./game.js?v=20261028-2";
-import { createAsk } from "./ask.js?v=20261028-2";
-import { createDay } from "./day.js?v=20261028-2";
-import { clamp, easeInOutCubic, hexNum } from "./util.js?v=20261028-2";
+import { DATA } from "./data.js?v=20261029";
+import { layoutIslands, placeIslands, makePathNetwork, slotLayout, withinHex, TOP, R } from "./world.js?v=20261029";
+import { makeScenery } from "./env.js?v=20261029";
+import { makeKit, setOwnerColor } from "./kit.js?v=20261029";
+import { buildModel, MODEL_TOP, seededRotation } from "./models.js?v=20261029";
+import { decorateIslands, buildSeaDecor, createBirds } from "./decor.js?v=20261029";
+import { makePeople } from "./people.js?v=20261029";
+import { createUI, pinColor } from "./ui.js?v=20261029";
+import { createStamps } from "./stamps.js?v=20261029";
+import { createPlay } from "./play.js?v=20261029";
+import { initAnalytics, track } from "./track.js?v=20261029";
+import { initVisits } from "./visits.js?v=20261029";
+import { createAvatar } from "./avatar.js?v=20261029";
+import { createEggs } from "./eggs.js?v=20261029";
+import { createGame } from "./game.js?v=20261029";
+import { createAsk } from "./ask.js?v=20261029";
+import { createDay } from "./day.js?v=20261029";
+import { clamp, easeInOutCubic, hexNum } from "./util.js?v=20261029";
 
 const params = new URLSearchParams(location.search);
 // 競選總部觸控展示機：?kiosk=1（24 吋橫放觸控螢幕，HDMI 同步輸出到 LED 牆）
@@ -112,11 +112,11 @@ async function start() {
   await new Promise((r) => requestAnimationFrame(r));
   const L = layoutIslands(DATA);
   const center = L.center;
-  const env = createEnvironment(THREE, scene, { quality, reduced, center });
+  const env = makeScenery(THREE, scene, { quality, reduced, center });
   // 手機（medium／low）一律用減面零件，三角形數約少一半
-  const kit = createKit(THREE, { quality: quality === "high" ? "high" : "low" });
-  const { tops, bridges } = buildIslands(THREE, scene, L, kit);
-  const graph = buildGraph(L, bridges);
+  const kit = makeKit(THREE, { quality: quality === "high" ? "high" : "low" });
+  const { tops, bridges } = placeIslands(THREE, scene, L, kit);
+  const graph = makePathNetwork(L, bridges);
 
   // 細項模型
   const itemInfo = new Map();
@@ -148,7 +148,7 @@ async function start() {
   buildSeaDecor(kit, center);
   const built = kit.build(scene);
   const birds = createBirds(THREE, scene, center, low ? 5 : 7);
-  const people = createPeople(THREE, scene, { L, graph, flows: DATA.flows, reduced, quality });
+  const people = makePeople(THREE, scene, { L, graph, flows: DATA.flows, reduced, quality });
 
   // ---------- 串聯線 ----------
   const flowMats = [];
@@ -705,7 +705,7 @@ async function start() {
   controls.addEventListener("change", () => { dirty = true; declutterAt = Math.min(declutterAt, performance.now() + 60); });
 
   function islandAt(p) {
-    return L.islands.find((i) => insideHex(p.x - i.cx, p.z - i.cz, R * 0.87)) || null;
+    return L.islands.find((i) => withinHex(p.x - i.cx, p.z - i.cz, R * 0.87)) || null;
   }
   function pick(cx, cy) {
     const r = canvas.getBoundingClientRect();
