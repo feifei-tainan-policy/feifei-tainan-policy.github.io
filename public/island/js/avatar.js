@@ -1,8 +1,8 @@
 // 我的角色：自己捏一個小人放進政策島，可以叫他走到某座島，或在島上自動逛逛。
 // 網頁版記在這台裝置的瀏覽器；總部觸控機只記在記憶體，閒置重置時收掉換下一位。
-import { TOP } from "./world.js?v=20261027-2";
-import { store, clamp, mulberry32, escapeHTML as h } from "./util.js?v=20261027-2";
-import { track } from "./track.js?v=20261027-2";
+import { TOP } from "./world.js?v=20261028";
+import { store, clamp, mulberry32, escapeHTML as h } from "./util.js?v=20261028";
+import { track } from "./track.js?v=20261028";
 
 const KEY = "feifei-island:avatar:v1";
 const hex = (n) => "#" + n.toString(16).padStart(6, "0");

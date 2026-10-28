@@ -1,7 +1,7 @@
 // 流量統計（Google Analytics 4）：記錄民眾點了哪座島、測驗結果、集章、分享、LINE 等等。
 // data.js 的 analytics.gaId 填上 G- 開頭的評估 ID 才會啟動；沒填就什麼都不送。
 // 自動導覽經過的島不算（和 HEART 政策島一樣只算民眾自己點的）。
-import { DATA } from "./data.js?v=20261027-2";
+import { DATA } from "./data.js?v=20261028";
 
 let on = false;
 let base = {};

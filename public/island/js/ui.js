@@ -1,12 +1,12 @@
 // DOM 介面：清單、卡片、HUD、導覽說明、影片、手機底部抽屜
-import { TAGS, SOURCES } from "./data.js?v=20261027-2";
-import { escapeHTML as h, store } from "./util.js?v=20261027-2";
-import { RAINBOW } from "./models.js?v=20261027-2";
-import { ROLE_LABEL, CARRY_LABEL } from "./people.js?v=20261027-2";
-import { qrSVG } from "./qr.js?v=20261027-2";
-import { stampURL } from "./stamps.js?v=20261027-2";
-import { islandURL, opinionURL } from "./share.js?v=20261027-2";
-import { track } from "./track.js?v=20261027-2";
+import { TAGS, SOURCES } from "./data.js?v=20261028";
+import { escapeHTML as h, store } from "./util.js?v=20261028";
+import { RAINBOW } from "./models.js?v=20261028";
+import { ROLE_LABEL, CARRY_LABEL } from "./people.js?v=20261028";
+import { qrSVG } from "./qr.js?v=20261028";
+import { stampURL } from "./stamps.js?v=20261028";
+import { islandURL, opinionURL } from "./share.js?v=20261028";
+import { track } from "./track.js?v=20261028";
 
 const CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩";
 // 每個版本資料夾各記各的「看過導覽說明」，新版本的說明才會再出現一次

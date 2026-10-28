@@ -382,7 +382,8 @@ node scripts/island-share-pages.mjs island4          # 重新產生分享頁（s
   每個事件都帶 `island_version`（版本資料夾）與 `kiosk`（是不是總部觸控機），報表可以分開看
 - **來站計數器**：早期網頁的「您是第 N 位訪客」，電腦版在清單底部、手機在妃妃上方。數字存在免費的
   [Abacus](https://jasoncameron.dev/abacus/) 計數服務（不用註冊），每個網域各算各的；同一個瀏覽器 30 分鐘內重新整理只算一次，
-  總部觸控機不計也不顯示，服務連不上時整塊不出現。設定在 `js/data.js` 的 `visits`，`api` 改成 `""` 就收起來
+  總部觸控機不計也不顯示，服務連不上時整塊不出現。設定在 `js/data.js` 的 `visits`：`show: false` 照常計數但民眾看不到
+  （2026-10-28 起先隱藏），改成 `true` 就公開；`api` 改成 `""` 完全停用
 預覽圖 `img/og/*.jpg` 是用 3D 場景實際拍下來的，改了島上的內容想更新預覽圖，再請工程端重拍。
 
 ### 同步到 yes100.ai/island

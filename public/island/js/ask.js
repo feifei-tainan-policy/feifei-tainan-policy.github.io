@@ -1,8 +1,8 @@
 // 問妃妃：像聊天一樣點問題、妃妃回答。不開放打字，答案由 data.js 的島與細項組成（都出自新聞稿），
 // 不另外寫承諾；福利類細項照樣標出「對標六都補齊」等狀態。
-import { TAGS } from "./data.js?v=20261027-2";
-import { escapeHTML as h } from "./util.js?v=20261027-2";
-import { track } from "./track.js?v=20261027-2";
+import { TAGS } from "./data.js?v=20261028";
+import { escapeHTML as h } from "./util.js?v=20261028";
+import { track } from "./track.js?v=20261028";
 
 const ACT_LABEL = { quiz: "🙋 你是哪一種台南人？", stamps: "🔖 集章卡", eggs: "🥭 找台南寶物", game: "🎮 四季農漁接接樂", avatar: "🧑 捏我的角色", opinion: "💬 用 LINE 告訴妃妃" };
 

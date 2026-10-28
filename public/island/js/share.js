@@ -1,5 +1,5 @@
 // 分享：手機叫出內建分享選單（LINE、臉書…），電腦複製連結；圖片存檔；LINE 官方帳號意見入口
-import { DATA } from "./data.js?v=20261027-2";
+import { DATA } from "./data.js?v=20261028";
 
 // 政策島所在的資料夾（/island2/），從這支程式的位置推算：整個資料夾複製成新版本時不用改路徑
 export const BASE = new URL("../", import.meta.url).href;

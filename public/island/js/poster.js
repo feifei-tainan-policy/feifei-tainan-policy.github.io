@@ -1,6 +1,6 @@
 // 存成圖片：集章卡與測驗結果，1080×1350（IG、LINE 都適合的直式比例）
-import { drawQR } from "./qr.js?v=20261027-2";
-import { stampCanvas, FONT } from "./stamps.js?v=20261027-2";
+import { drawQR } from "./qr.js?v=20261028";
+import { stampCanvas, FONT } from "./stamps.js?v=20261028";
 
 const W = 1080, H = 1350;
 const GREEN = "#176b38", PINK = "#e04a67", INK = "#1f2421", MUTED = "#5d665f", CREAM = "#fff8f1";

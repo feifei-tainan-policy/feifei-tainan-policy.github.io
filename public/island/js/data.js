@@ -741,8 +741,9 @@ export const DATA = {
   // 流量統計（Google Analytics 4）：填上 G- 開頭的評估 ID 才會開始記錄；空字串＝不記錄
   analytics: { gaId: "" },
 
-  // 來站計數器（您是第 N 位訪客）：用免費的 Abacus 計數服務，每個網域各算各的；api 改成空字串 "" 就會收起
-  visits: { api: "https://abacus.jasoncameron.dev", key: "island", since: "2026.10.27" },
+  // 來站計數器（您是第 N 位訪客）：用免費的 Abacus 計數服務，每個網域各算各的；api 改成空字串 "" 就完全停用
+  // show: false＝照常計數、民眾看不到（2026-10-28 先隱藏），要公開時改成 true
+  visits: { api: "https://abacus.jasoncameron.dev", key: "island", since: "2026.10.27", show: false },
 
   // 問妃妃：點問題、妃妃回答。lead 只寫連接的話，內容一律由下面列的細項（新聞稿）組成。
   // acts：quiz 測驗、stamps 集章卡、eggs 找寶物、game 小遊戲、avatar 我的角色、opinion LINE（有設定才顯示）
