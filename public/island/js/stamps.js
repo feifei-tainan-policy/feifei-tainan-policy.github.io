@@ -1,6 +1,6 @@
 // 集章卡：自己點進一座島（或島上的細項）就蓋一個章，7 座島集滿可以存成「我的台南集章卡」。
 // 網頁版記在這台裝置的瀏覽器；總部觸控機只記在記憶體，閒置重置時歸零換下一位。
-import { store, mulberry32, hashString, escapeHTML as h } from "./util.js?v=20261029-2";
+import { store, mulberry32, hashString, escapeHTML as h } from "./util.js?v=20261029-3";
 
 const KEY = "feifei-island:stamps:v1";
 export const FONT = '"PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Heiti TC", sans-serif';

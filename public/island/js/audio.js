@@ -31,16 +31,16 @@ function voice(freq, t, dur, gain, type) {
 }
 
 function schedule() {
-  const beat = 0.34; // 輕快
+  const beat = 0.44; // 悠閒、留白多一點
   while (nextTime < ctx.currentTime + 0.4) {
-    if (Math.random() > 0.22) { // 偶爾休止，才有呼吸
+    if (Math.random() > 0.32) { // 多留白，更悠閒
       mi = Math.max(0, Math.min(SCALE.length - 1, mi + WALK[(Math.random() * WALK.length) | 0]));
-      voice(midiToFreq(SCALE[mi]), nextTime, 0.55, 0.12, "triangle");
-      if (step % 2 === 0) voice(midiToFreq(SCALE[mi] + 12), nextTime + beat * 0.5, 0.22, 0.045, "sine"); // 高八度點綴
+      voice(midiToFreq(SCALE[mi]), nextTime, 0.72, 0.11, "triangle");
+      if (step % 3 === 0) voice(midiToFreq(SCALE[mi] + 12), nextTime + beat * 0.5, 0.3, 0.04, "sine"); // 高八度點綴，較疏
     }
     if (step % 4 === 0) { // 每 4 拍一個柔和低音
       const bass = ROOT - 12 + PENT[((step / 4) | 0) % PENT.length];
-      voice(midiToFreq(bass), nextTime, beat * 3.6, 0.07, "sine");
+      voice(midiToFreq(bass), nextTime, beat * 3.6, 0.05, "sine");
     }
     nextTime += beat;
     step++;
@@ -65,7 +65,7 @@ function start() {
     nextTime = ctx.currentTime + 0.1;
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-    master.gain.linearRampToValueAtTime(0.6, ctx.currentTime + 0.8); // 柔和淡入
+    master.gain.linearRampToValueAtTime(0.52, ctx.currentTime + 0.8); // 柔和淡入、音量略降
     schedule();
     timer = setInterval(schedule, 120);
     return true;

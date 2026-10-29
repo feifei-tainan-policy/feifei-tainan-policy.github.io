@@ -1,7 +1,7 @@
 // 台南人的一天：點畫面上的時段條，看一天裡不同時段跟哪些政策有關；也可以自動播放一整天。
 // 時段與對應的細項都在 data.js 的 dayCycle（示意情境，不是服務時間）。
-import { escapeHTML as h } from "./util.js?v=20261029-2";
-import { track } from "./track.js?v=20261029-2";
+import { escapeHTML as h } from "./util.js?v=20261029-3";
+import { track } from "./track.js?v=20261029-3";
 
 const toMin = (s) => { const [a, b] = s.split(":").map(Number); return a * 60 + b; };
 

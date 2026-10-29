@@ -1,6 +1,6 @@
 // 小人、串聯線上的搬運者、騎單車的妃妃市長、抱小熊的姐姐妃妃
-import { TOP } from "./world.js?v=20261029-2";
-import { mulberry32, clamp } from "./util.js?v=20261029-2";
+import { TOP } from "./world.js?v=20261029-3";
+import { mulberry32, clamp } from "./util.js?v=20261029-3";
 
 export const SISTER_SPOT = [-0.12, 1.42];
 const SKIN = [0xf5d0b0, 0xddb089, 0xc68e63, 0xecbf98];

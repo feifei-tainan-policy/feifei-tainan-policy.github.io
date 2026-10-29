@@ -2,25 +2,25 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { OrbitControls } from "../vendor/addons/OrbitControls.js";
 import { CSS2DRenderer, CSS2DObject } from "../vendor/addons/CSS2DRenderer.js";
-import { DATA } from "./data.js?v=20261029-2";
-import { layoutIslands, placeIslands, makePathNetwork, slotLayout, withinHex, TOP, R } from "./world.js?v=20261029-2";
-import { makeScenery } from "./env.js?v=20261029-2";
-import { makeKit, setOwnerColor } from "./kit.js?v=20261029-2";
-import { buildModel, MODEL_TOP, seededRotation } from "./models.js?v=20261029-2";
-import { decorateIslands, buildSeaDecor, createBirds, createFish } from "./decor.js?v=20261029-2";
-import { initAudio } from "./audio.js?v=20261029-2";
-import { makePeople } from "./people.js?v=20261029-2";
-import { createUI, pinColor } from "./ui.js?v=20261029-2";
-import { createStamps } from "./stamps.js?v=20261029-2";
-import { createPlay } from "./play.js?v=20261029-2";
-import { initAnalytics, track } from "./track.js?v=20261029-2";
-import { initVisits } from "./visits.js?v=20261029-2";
-import { createAvatar } from "./avatar.js?v=20261029-2";
-import { createEggs } from "./eggs.js?v=20261029-2";
-import { createGame } from "./game.js?v=20261029-2";
-import { createAsk } from "./ask.js?v=20261029-2";
-import { createDay } from "./day.js?v=20261029-2";
-import { clamp, easeInOutCubic, hexNum } from "./util.js?v=20261029-2";
+import { DATA } from "./data.js?v=20261029-3";
+import { layoutIslands, placeIslands, makePathNetwork, slotLayout, withinHex, TOP, R } from "./world.js?v=20261029-3";
+import { makeScenery } from "./env.js?v=20261029-3";
+import { makeKit, setOwnerColor } from "./kit.js?v=20261029-3";
+import { buildModel, MODEL_TOP, seededRotation } from "./models.js?v=20261029-3";
+import { decorateIslands, buildSeaDecor, createBirds, createFish } from "./decor.js?v=20261029-3";
+import { initAudio } from "./audio.js?v=20261029-3";
+import { makePeople } from "./people.js?v=20261029-3";
+import { createUI, pinColor } from "./ui.js?v=20261029-3";
+import { createStamps } from "./stamps.js?v=20261029-3";
+import { createPlay } from "./play.js?v=20261029-3";
+import { initAnalytics, track } from "./track.js?v=20261029-3";
+import { initVisits } from "./visits.js?v=20261029-3";
+import { createAvatar } from "./avatar.js?v=20261029-3";
+import { createEggs } from "./eggs.js?v=20261029-3";
+import { createGame } from "./game.js?v=20261029-3";
+import { createAsk } from "./ask.js?v=20261029-3";
+import { createDay } from "./day.js?v=20261029-3";
+import { clamp, easeInOutCubic, hexNum } from "./util.js?v=20261029-3";
 
 const params = new URLSearchParams(location.search);
 // 競選總部觸控展示機：?kiosk=1（24 吋橫放觸控螢幕，HDMI 同步輸出到 LED 牆）
@@ -149,7 +149,7 @@ async function start() {
   buildSeaDecor(kit, center);
   const built = kit.build(scene);
   const birds = createBirds(THREE, scene, center, low ? 5 : 7);
-  const fish = createFish(THREE, scene, center, low ? 6 : 9);
+  const fish = createFish(THREE, scene, center, low ? 9 : 14);
   const people = makePeople(THREE, scene, { L, graph, flows: DATA.flows, reduced, quality });
 
   // ---------- 串聯線 ----------

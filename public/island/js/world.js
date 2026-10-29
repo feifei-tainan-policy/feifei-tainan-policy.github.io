@@ -1,5 +1,5 @@
 // 世界佈局：六角島、步道環、橋、曾文溪河道、行人路網、細項配置
-import { canvasTexture, mulberry32, hashString, hexNum, mixHex } from "./util.js?v=20261029-2";
+import { canvasTexture, mulberry32, hashString, hexNum, mixHex } from "./util.js?v=20261029-3";
 
 export const R = 2.02; // 六角形外接半徑（pointy-top，頂點朝 ±z）
 export const SPACING = 2.36;
