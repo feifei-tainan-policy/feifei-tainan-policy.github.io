@@ -1,12 +1,12 @@
 // 台南政策島離線快取：只有競選總部展示機（?kiosk=1）會註冊。
 // 頁面先上網拿最新版、斷線時用快取；程式與圖片先用快取、背景更新。
 // 改版時執行 node scripts/island-version.mjs <資料夾>，V 換掉後展示機會在下一次閒置時自動換成新版。
-const V = "20261029";
+const V = "20261029-2";
 // 快取名稱用版本資料夾開頭（island2-…），不同版本的政策島不會互相清掉快取
 const SCOPE = new URL("./", self.location).pathname;
 const PREFIX = SCOPE.replace(/\//g, "") + "-";
 const VERSION = PREFIX + V;
-const JS = ["main", "data", "decor", "env", "kit", "models", "people", "ui", "util", "world", "qr", "share", "stamps", "poster", "quiz", "play", "track", "avatar", "eggs", "game", "ask", "day", "visits"];
+const JS = ["main", "data", "decor", "env", "kit", "models", "people", "ui", "util", "world", "qr", "share", "stamps", "poster", "quiz", "play", "track", "avatar", "eggs", "game", "ask", "day", "visits", "audio"];
 const CORE = [
   "./",
   `./island.css?v=${V}`,

@@ -1,9 +1,9 @@
 // 街道家具、各島樹種、台南沿海點綴（頂頭額沙洲、國聖港燈塔、七股鹽山、蚵棚、竹筏、黑面琵鷺）
-import { TOP, WATER_Y, R } from "./world.js?v=20261029";
-import { C } from "./models.js?v=20261029";
-import { mulberry32, hashString, mixHex } from "./util.js?v=20261029";
-import { coastX } from "./env.js?v=20261029";
-import { SISTER_SPOT } from "./people.js?v=20261029";
+import { TOP, WATER_Y, R } from "./world.js?v=20261029-2";
+import { C } from "./models.js?v=20261029-2";
+import { mulberry32, hashString, mixHex } from "./util.js?v=20261029-2";
+import { coastX } from "./env.js?v=20261029-2";
+import { SISTER_SPOT } from "./people.js?v=20261029-2";
 
 export function tree(k, x, y, z, type, s, rnd) {
   const r = rnd();
@@ -229,3 +229,107 @@ export function createBirds(THREE, scene, center, count = 7) {
 }
 
 export { R };
+
+// 虱目魚群（動態）：台南代表魚。平常半沉在水面巡游，會不定時冒出又潛下，偶爾整尾躍出水面、落下點出漣漪。
+// 和鳥一樣用 InstancedMesh；位置是時間的函數（不靠逐幀累加，換幀率也穩）。水面不透明，魚身中心約在水面、露出上半身。
+export function createFish(THREE, scene, center, count = 9) {
+  const cx = center.x, cz = center.z;
+  const bodyGeo = new THREE.SphereGeometry(1, 7, 5);
+  const tailGeo = new THREE.ConeGeometry(1, 1, 5).rotateX(-Math.PI / 2); // 圓錐底朝後，當往後張開的尾鰭
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xcdd9de, roughness: 0.45, metalness: 0.1, flatShading: true });
+  const tailMat = new THREE.MeshStandardMaterial({ color: 0xb4c3cb, roughness: 0.6, flatShading: true });
+  const bodies = new THREE.InstancedMesh(bodyGeo, bodyMat, count);
+  const tails = new THREE.InstancedMesh(tailGeo, tailMat, count);
+  bodies.frustumCulled = false; tails.frustumCulled = false;
+  scene.add(bodies); scene.add(tails);
+
+  const fish = [];
+  for (let i = 0; i < count; i++) {
+    fish.push({
+      rad: 9 + Math.random() * 15,          // 離中心半徑：落在環島海面、避開中央島群
+      ang0: Math.random() * Math.PI * 2,
+      spin: (0.05 + Math.random() * 0.05) * (Math.random() < 0.5 ? 1 : -1),
+      bob: Math.random() * Math.PI * 2,
+      period: 14 + Math.random() * 12,      // 出沒週期（秒）
+      pOff: Math.random(),
+      size: 0.55 + Math.random() * 0.4,
+      jumpH: 0.5 + Math.random() * 0.5,
+      prevC: 0,
+    });
+  }
+
+  // 漣漪池（躍出落水時的水圈）
+  const rGeo = new THREE.RingGeometry(0.5, 0.64, 18).rotateX(-Math.PI / 2);
+  const rings = [];
+  for (let i = 0; i < 8; i++) {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xeef6f4, transparent: true, opacity: 0, depthWrite: false, fog: false });
+    const mesh = new THREE.Mesh(rGeo, mat);
+    mesh.position.y = WATER_Y + 0.02; mesh.visible = false; mesh.frustumCulled = false;
+    scene.add(mesh);
+    rings.push({ mesh, mat, active: false, t0: 0 });
+  }
+  function splash(x, z, time) {
+    const r = rings.find((p) => !p.active);
+    if (!r) return;
+    r.active = true; r.t0 = time; r.mesh.position.set(x, WATER_Y + 0.02, z);
+  }
+
+  const dummy = new THREE.Object3D();
+  dummy.rotation.order = "YXZ"; // 先轉向（Y）再仰角（X）
+  function update(time) {
+    for (let i = 0; i < count; i++) {
+      const f = fish[i];
+      const ang = f.ang0 + time * f.spin;
+      const rad = f.rad + Math.sin(time * 0.2 + f.bob) * 1.2;
+      const x = cx + Math.cos(ang) * rad;
+      const z = cz + Math.sin(ang) * rad;
+      const yaw = Math.atan2(-Math.sin(ang) * Math.sign(f.spin), Math.cos(ang) * Math.sign(f.spin));
+
+      const c = (time / f.period + f.pOff) % 1; // 出沒進度 0~1
+      let emerge;
+      if (c < 0.1) emerge = c / 0.1;              // 冒出
+      else if (c < 0.72) emerge = 1;              // 在水面巡游
+      else if (c < 0.82) emerge = (0.82 - c) / 0.1; // 潛下
+      else emerge = 0;                            // 消失在水面下
+
+      let jump = 0, pitch = 0;
+      if (c > 0.34 && c < 0.54) {                 // 露面期間躍出一次
+        const jp = (c - 0.34) / 0.2;
+        jump = Math.sin(jp * Math.PI) * f.jumpH;
+        pitch = Math.cos(jp * Math.PI) * 0.5;
+      }
+      const y = WATER_Y + jump + Math.sin(time * 2 + f.bob) * 0.015;
+      if (f.prevC < 0.52 && c >= 0.52) splash(x, z, time); // 落水點漣漪
+      f.prevC = c;
+
+      const sc = emerge * f.size;
+      const wag = Math.sin(time * 7 + f.bob) * 0.3;
+      const back = sc * 0.5;
+      dummy.position.set(x, y, z);
+      dummy.rotation.set(pitch, yaw, 0);
+      dummy.scale.set(sc * 0.22, sc * 0.15, sc * 0.52);
+      dummy.updateMatrix();
+      bodies.setMatrixAt(i, dummy.matrix);
+      dummy.position.set(x - Math.sin(yaw) * back, y, z - Math.cos(yaw) * back);
+      dummy.rotation.set(pitch, yaw + wag, 0);
+      dummy.scale.set(sc * 0.24, sc * 0.03, sc * 0.26);
+      dummy.updateMatrix();
+      tails.setMatrixAt(i, dummy.matrix);
+    }
+    bodies.instanceMatrix.needsUpdate = true;
+    tails.instanceMatrix.needsUpdate = true;
+
+    const DUR = 1.3;
+    for (const r of rings) {
+      if (!r.active) continue;
+      const k = (time - r.t0) / DUR;
+      if (k >= 1) { r.active = false; r.mesh.visible = false; r.mat.opacity = 0; continue; }
+      r.mesh.visible = true;
+      const s = 0.3 + k * 2.2;
+      r.mesh.scale.set(s, s, s);
+      r.mat.opacity = (1 - k) * 0.4;
+    }
+  }
+  update(0);
+  return { update, mesh: bodies };
+}

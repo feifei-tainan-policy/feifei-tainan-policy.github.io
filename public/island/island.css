@@ -1405,3 +1405,5 @@ body.kiosk .visits { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+.toolbar button#btn-audio svg circle { fill: currentColor; }
